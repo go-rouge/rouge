@@ -1,6 +1,4 @@
 github.com/go-regexp/engine v0.1.3 h1:0U5DrrBEYjNX/f0yFESpQDWmJOtXmmZqluNAUBXjfxY=
 github.com/go-regexp/engine v0.1.3/go.mod h1:8rju5lq5OkskQh9+m+FjBP6965giMPUdIOdrvFrbqn4=
-github.com/go-ruby-regexp/regexp v0.0.0-20260701043846-fa3d6604e1ee h1:ctauEAdAq129WCrU+dndYcOjNlo1Y94vWNBtgXp1heE=
-github.com/go-ruby-regexp/regexp v0.0.0-20260701043846-fa3d6604e1ee/go.mod h1:+0nK2X+aCPMO91bPMM/DT1OFUIzFQeoTPGkkOR3kd84=
-github.com/go-ruby-regexp/regexp v0.0.0-20260831115702-e14375e92d68 h1:Jw8B4iEM1qD4Jp2EhcSoZAmBgs/ZDVJW/kRyCtfqIy0=
-github.com/go-ruby-regexp/regexp v0.0.0-20260831115702-e14375e92d68/go.mod h1:I3i2r1AXulgMBt/KiWBcxjnoNsB09ZFKkj2Vb5Mhzuw=
+github.com/go-ruby-regexp/regexp v0.0.0-20260927145504-6cbb63926eb2 h1:pNvJf0zgzg0rTEq1fToFa5fnzK13nIble80caTmdG3g=
+github.com/go-ruby-regexp/regexp v0.0.0-20260927145504-6cbb63926eb2/go.mod h1:I3i2r1AXulgMBt/KiWBcxjnoNsB09ZFKkj2Vb5Mhzuw=
