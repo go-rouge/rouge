@@ -1,6 +1,6 @@
 module github.com/go-rouge/rouge
 
-go 1.26.4
+go 1.27.1
 
 require github.com/go-ruby-regexp/regexp v0.0.0-20260927145504-6cbb63926eb2
 
