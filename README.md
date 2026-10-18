@@ -47,7 +47,12 @@ inline := rouge.HTMLInlineFormatter{Theme: rouge.Github}.Format(toks) // inline 
 - **Formatters** — `HTML` (`<span class="shortcode">`, the gem's exact codes;
   `Text`/`Escape` pass through) and `HTMLInline` (inline `style=` from a `Theme`),
   registered as `"html"` / `"html_inline"`; plus `WrapHTML` for the gem's
-  `<pre class="highlight"><code>` page wrapper.
+  `<pre class="highlight"><code>` page wrapper. Beyond the gem, `HLJS`
+  (`"hljs"`) writes [highlight.js class
+  names](https://highlightjs.readthedocs.io/en/latest/css-classes-reference.html)
+  (`hljs-keyword`, `hljs-title function_`), so stylesheets written for
+  highlight.js colour Rouge's tokens; `HLJSScope(token)` gives the mapping.
+  go-slides uses it for Marp's themes.
 - **Themes** — `Base16`, `Github`, `ThankfulEyes`: their resolved
   `rendered_rules` captured token-by-token, with `StyleFor` walking the ancestor
   chain exactly like `Rouge::Theme.get_style`.

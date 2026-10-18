@@ -33,6 +33,7 @@ func init() {
 	// common gem default. Construct HTMLInlineFormatter{Theme: ...} directly for
 	// another theme.
 	registerFormatter(HTMLInlineFormatter{Theme: Github})
+	registerFormatter(HLJSFormatter{})
 
 	registerTheme(Base16)
 	registerTheme(Github)
