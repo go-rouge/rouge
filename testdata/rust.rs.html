@@ -1,0 +1,82 @@
+<span class="cd">//! An inner doc comment.</span>
+<span class="c1">//// four slashes is an ordinary comment again</span>
+<span class="cd">/// An outer doc comment.</span>
+<span class="c1">// a plain line comment</span>
+<span class="cm">/**/</span>
+<span class="cm">/*** a plain block /* nested */ still plain ***/</span>
+<span class="cd">/** a doc block /* nested plain is still doc */ */</span>
+
+<span class="nd">#![allow(dead_code)]</span>
+<span class="nd">#[derive(Debug,</span> <span class="nd">Clone,</span> <span class="nd">PartialEq)]</span>
+<span class="k">pub</span> <span class="k">struct</span> <span class="n">Buffer</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="n">items</span><span class="p">:</span> <span class="nb">Vec</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">len</span><span class="p">:</span> <span class="nb">usize</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="k">const</span> <span class="n">MAX</span><span class="p">:</span> <span class="nb">u32</span> <span class="o">=</span> <span class="mi">1_000</span><span class="p">;</span>
+<span class="k">static</span> <span class="n">GREETING</span><span class="p">:</span> <span class="o">&amp;</span><span class="nb">str</span> <span class="o">=</span> <span class="s">"hello </span><span class="se">\"</span><span class="s">world</span><span class="se">\"\n</span><span class="s">"</span><span class="p">;</span>
+
+<span class="nd">macro_rules!</span> <span class="n">twice</span> <span class="p">{</span>
+    <span class="p">(</span><span class="nv">$x:expr</span><span class="p">)</span> <span class="k">=&gt;</span> <span class="p">{</span>
+        <span class="nv">$x</span> <span class="o">+</span> <span class="nv">$x</span>
+    <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="k">impl</span><span class="o">&lt;</span><span class="n">T</span><span class="p">:</span> <span class="nb">Clone</span><span class="o">&gt;</span> <span class="n">Buffer</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="k">pub</span> <span class="k">fn</span> <span class="nf">new</span><span class="p">()</span> <span class="k">-&gt;</span> <span class="k">Self</span> <span class="p">{</span>
+        <span class="n">Buffer</span> <span class="p">{</span> <span class="n">items</span><span class="p">:</span> <span class="nn">Vec</span><span class="p">::</span><span class="nf">new</span><span class="p">(),</span> <span class="n">len</span><span class="p">:</span> <span class="mi">0</span> <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">pub</span> <span class="k">async</span> <span class="k">fn</span> <span class="nf">push</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span> <span class="k">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">-&gt;</span> <span class="nb">Result</span><span class="o">&lt;</span><span class="p">(),</span> <span class="nb">String</span><span class="o">&gt;</span> <span class="p">{</span>
+        <span class="k">self</span><span class="py">.items</span><span class="nf">.push</span><span class="p">(</span><span class="n">item</span><span class="p">);</span>
+        <span class="k">self</span><span class="py">.len</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="nf">Ok</span><span class="p">(())</span>
+    <span class="p">}</span>
+
+    <span class="k">fn</span> <span class="nf">numbers</span><span class="p">(</span><span class="o">&amp;</span><span class="k">self</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// non-ASCII identifiers, so the XID substitution is measured</span>
+        <span class="k">let</span> <span class="n">café</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">Ωmega</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">café</span><span class="p">,</span> <span class="n">Ωmega</span><span class="p">);</span>
+        <span class="k">let</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">42u8</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">0xdead_beef</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">d</span> <span class="o">=</span> <span class="mi">0b1010_1010i64</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">e</span> <span class="o">=</span> <span class="mi">0o755</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">f</span> <span class="o">=</span> <span class="mf">1_000.5</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">g</span> <span class="o">=</span> <span class="mf">1.5e-3f64</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">h</span> <span class="o">=</span> <span class="mf">2.</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">fn</span> <span class="nf">strings</span><span class="p">(</span><span class="o">&amp;</span><span class="k">self</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">let</span> <span class="n">s</span> <span class="o">=</span> <span class="s">"escaped </span><span class="se">\t</span><span class="s"> </span><span class="se">\u{1F600}</span><span class="s"> </span><span class="se">\x41</span><span class="s">"</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">r</span> <span class="o">=</span> <span class="s">r#"raw "quotes" and \no escapes"#</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">b</span> <span class="o">=</span> <span class="s">b"bytes"</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">ch</span> <span class="o">=</span> <span class="sc">'x'</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">nl</span> <span class="o">=</span> <span class="sc">'\n'</span><span class="p">;</span>
+        <span class="k">let</span> <span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">ch</span><span class="p">,</span> <span class="n">nl</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">pub</span> <span class="k">trait</span> <span class="n">Shape</span> <span class="p">{</span>
+    <span class="k">fn</span> <span class="nf">area</span><span class="p">(</span><span class="o">&amp;</span><span class="k">self</span><span class="p">)</span> <span class="k">-&gt;</span> <span class="nb">f64</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">fn</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">let</span> <span class="k">mut</span> <span class="n">buf</span> <span class="o">=</span> <span class="nn">Buffer</span><span class="p">::</span><span class="o">&lt;</span><span class="nb">i32</span><span class="o">&gt;</span><span class="p">::</span><span class="nf">new</span><span class="p">();</span>
+    <span class="nd">println!</span><span class="p">(</span><span class="s">"{:?} {}"</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="nd">twice!</span><span class="p">(</span><span class="mi">3</span><span class="p">));</span>
+    <span class="k">let</span> <span class="n">v</span> <span class="o">=</span> <span class="nd">vec!</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">];</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="k">in</span> <span class="n">v</span><span class="nf">.iter</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">match</span> <span class="n">x</span> <span class="p">{</span>
+            <span class="mi">1</span> <span class="k">=&gt;</span> <span class="nd">println!</span><span class="p">(</span><span class="s">"one"</span><span class="p">),</span>
+            <span class="n">_</span> <span class="k">=&gt;</span> <span class="p">(),</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">let</span> <span class="n">opt</span><span class="p">:</span> <span class="nb">Option</span><span class="o">&lt;&amp;</span><span class="nb">i32</span><span class="o">&gt;</span> <span class="o">=</span> <span class="n">v</span><span class="nf">.first</span><span class="p">();</span>
+    <span class="k">if</span> <span class="k">let</span> <span class="nf">Some</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">=</span> <span class="n">opt</span> <span class="p">{</span>
+        <span class="k">let</span> <span class="n">_</span> <span class="o">=</span> <span class="n">n</span><span class="nf">.to_string</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">let</span> <span class="n">lt</span><span class="p">:</span> <span class="o">&amp;</span><span class="k">'static</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">GREETING</span><span class="p">;</span>
+    <span class="k">let</span> <span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">lt</span><span class="p">,</span> <span class="n">MAX</span><span class="p">,</span> <span class="n">buf</span><span class="py">.len</span><span class="p">);</span>
+<span class="p">}</span>

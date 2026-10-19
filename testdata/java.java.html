@@ -1,0 +1,63 @@
+<span class="c1">// a single-line comment</span>
+<span class="cm">/* a multiline
+   comment */</span>
+<span class="kn">package</span> <span class="nn">com.example.app</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.*</span><span class="o">;</span>
+
+<span class="nd">@Deprecated</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Widget</span> <span class="kd">extends</span> <span class="nc">Base</span> <span class="kd">implements</span> <span class="nc">Runnable</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="no">MAX_SIZE</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>
+    <span class="kd">protected</span> <span class="kd">volatile</span> <span class="kt">boolean</span> <span class="n">running</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="kt">char</span> <span class="n">initial</span> <span class="o">=</span> <span class="sc">'x'</span><span class="o">;</span>
+    <span class="kt">char</span> <span class="n">escaped</span> <span class="o">=</span> <span class="sc">'\n'</span><span class="o">;</span>
+    <span class="nc">String</span> <span class="n">name</span> <span class="o">=</span> <span class="s">"a \"quoted\" value"</span><span class="o">;</span>
+    <span class="kt">double</span> <span class="n">ratio</span> <span class="o">=</span> <span class="mf">1_000.5e3d</span><span class="o">;</span>
+    <span class="kt">float</span> <span class="n">small</span> <span class="o">=</span> <span class="mf">0.5f</span><span class="o">;</span>
+    <span class="kt">int</span> <span class="n">hex</span> <span class="o">=</span> <span class="mh">0xFF_FF</span><span class="o">;</span>
+    <span class="kt">int</span> <span class="n">bin</span> <span class="o">=</span> <span class="mb">0b1010_1010</span><span class="o">;</span>
+    <span class="kt">int</span> <span class="n">oct</span> <span class="o">=</span> <span class="mo">0777</span><span class="o">;</span>
+    <span class="kt">long</span> <span class="n">big</span> <span class="o">=</span> <span class="mi">1_234L</span><span class="o">;</span>
+    <span class="kt">var</span> <span class="n">inferred</span> <span class="o">=</span> <span class="nc">List</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="mi">2</span><span class="o">);</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">Widget</span> <span class="n">w</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Widget</span><span class="o">();</span>
+        <span class="nl">outer:</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="no">MAX_SIZE</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="k">continue</span> <span class="n">outer</span><span class="o">;</span>
+            <span class="k">switch</span> <span class="o">(</span><span class="n">i</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">case</span> <span class="mi">1</span><span class="o">:</span> <span class="k">break</span><span class="o">;</span>
+                <span class="k">default</span><span class="o">:</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">IllegalStateException</span><span class="o">(</span><span class="s">"bad"</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">w</span><span class="o">.</span><span class="na">run</span><span class="o">();</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">assert</span> <span class="n">e</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+            <span class="n">w</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+        <span class="nc">String</span> <span class="n">text</span> <span class="o">=</span> <span class="sh">"""
+            a text block
+            with "quotes" inside
+            """</span><span class="o">;</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">text</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kd">synchronized</span> <span class="kt">void</span> <span class="nf">close</span><span class="o">()</span> <span class="kd">throws</span> <span class="nc">Exception</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">running</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="kd">interface</span> <span class="nc">Shape</span> <span class="o">{</span>
+    <span class="kt">double</span> <span class="nf">area</span><span class="o">();</span>
+<span class="o">}</span>
+
+<span class="kd">record</span> <span class="nf">Point</span><span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">y</span><span class="o">)</span> <span class="o">{}</span>
+
+<span class="kd">enum</span> <span class="nc">Colour</span> <span class="o">{</span> <span class="no">RED</span><span class="o">,</span> <span class="no">GREEN</span><span class="o">,</span> <span class="no">BLUE</span> <span class="o">}</span>
