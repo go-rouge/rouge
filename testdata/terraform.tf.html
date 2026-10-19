@@ -1,0 +1,65 @@
+<span class="c1"># a comment</span>
+<span class="k">terraform</span> <span class="p">{</span>
+  <span class="nx">required_version</span> <span class="o">=</span> <span class="s2">"&gt;= 1.5.0"</span>
+
+  <span class="nx">required_providers</span> <span class="p">{</span>
+    <span class="nx">aws</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="nx">source</span>  <span class="o">=</span> <span class="s2">"hashicorp/aws"</span>
+      <span class="nx">version</span> <span class="o">=</span> <span class="s2">"~&gt; 5.0"</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">provider</span> <span class="s2">"aws"</span> <span class="p">{</span>
+  <span class="nx">region</span> <span class="o">=</span> <span class="kd">var</span><span class="p">.</span><span class="nx">region</span>
+<span class="p">}</span>
+
+<span class="k">variable</span> <span class="s2">"region"</span> <span class="p">{</span>
+  <span class="nx">type</span>    <span class="o">=</span> <span class="nx">string</span>
+  <span class="nx">default</span> <span class="o">=</span> <span class="s2">"eu-west-3"</span>
+<span class="p">}</span>
+
+<span class="k">variable</span> <span class="s2">"count_of"</span> <span class="p">{</span>
+  <span class="nx">type</span>    <span class="o">=</span> <span class="nx">number</span>
+  <span class="nx">default</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="p">}</span>
+
+<span class="nx">locals</span> <span class="p">{</span>
+  <span class="nx">name</span>    <span class="o">=</span> <span class="s2">"app-</span><span class="p">${</span><span class="kd">var</span><span class="p">.</span><span class="nx">region</span><span class="p">}</span><span class="s2">"</span>
+  <span class="nx">escaped</span> <span class="o">=</span> <span class="s2">"a literal </span><span class="s">$${</span><span class="s2">not_interpolated} brace"</span>
+  <span class="nx">tags</span>    <span class="o">=</span> <span class="p">{</span> <span class="nx">Owner</span> <span class="o">=</span> <span class="s2">"team"</span><span class="p">,</span> <span class="nx">Env</span> <span class="o">=</span> <span class="s2">"prod"</span> <span class="p">}</span>
+  <span class="nx">slug</span>    <span class="o">=</span> <span class="s2">"</span><span class="p">${</span><span class="nx">replace</span><span class="p">(</span><span class="kd">local</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="dl">"/</span><span class="sr">[^a-z0-9]+</span><span class="dl">/"</span><span class="s2">, "</span><span class="o">-</span><span class="s2">")}"</span>
+  <span class="nx">from</span>    <span class="o">=</span> <span class="s2">"</span><span class="p">${</span><span class="k">data</span><span class="p">.</span><span class="nx">aws_ami</span><span class="p">.</span><span class="nx">latest</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="s2">"</span>
+  <span class="nx">always</span>  <span class="o">=</span> <span class="s2">"</span><span class="p">${</span><span class="kc">true</span><span class="p">}</span><span class="s2">"</span>
+  <span class="nx">mixed</span>   <span class="o">=</span> <span class="s2">"</span><span class="p">${</span><span class="kd">var</span><span class="p">.</span><span class="nx">count_of</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="kc">false</span> <span class="o">?</span> <span class="s2">"many"</span> <span class="o">:</span> <span class="s2">"one"</span><span class="p">}</span><span class="s2">"</span>
+<span class="err">}</span>
+
+<span class="k">resource</span> <span class="s2">"aws_instance"</span> <span class="s2">"web"</span> <span class="p">{</span>
+  <span class="nx">count</span>         <span class="o">=</span> <span class="kd">var</span><span class="p">.</span><span class="nx">count_of</span>
+  <span class="nx">ami</span>           <span class="o">=</span> <span class="k">data</span><span class="p">.</span><span class="nx">aws_ami</span><span class="p">.</span><span class="nx">latest</span><span class="p">.</span><span class="nx">id</span>
+  <span class="nx">instance_type</span> <span class="o">=</span> <span class="s2">"t3.micro"</span>
+
+  <span class="nx">tags</span> <span class="o">=</span> <span class="nx">merge</span><span class="p">(</span><span class="kd">local</span><span class="p">.</span><span class="nx">tags</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">Name</span> <span class="o">=</span> <span class="s2">"</span><span class="p">${</span><span class="kd">local</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="s2">-</span><span class="p">${</span><span class="nx">count</span><span class="p">.</span><span class="nx">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">}</span><span class="s2">"</span>
+  <span class="p">})</span>
+
+  <span class="nx">user_data</span> <span class="o">=</span> <span class="o">&lt;&lt;-</span><span class="nx">EOT</span>
+    <span class="c1">#!/bin/sh</span>
+    <span class="nx">echo</span> <span class="s2">"</span><span class="p">${</span><span class="kd">local</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="s2">"</span> <span class="o">&gt;</span> <span class="o">/</span><span class="nx">tmp</span><span class="o">/</span><span class="nx">name</span>
+  <span class="nx">EOT</span>
+<span class="err">}</span>
+
+<span class="k">data</span> <span class="s2">"aws_ami"</span> <span class="s2">"latest"</span> <span class="p">{</span>
+  <span class="nx">most_recent</span> <span class="o">=</span> <span class="kc">true</span>
+  <span class="nx">owners</span>      <span class="o">=</span> <span class="p">[</span><span class="s2">"amazon"</span><span class="p">]</span>
+
+  <span class="nx">filter</span> <span class="p">{</span>
+    <span class="nx">name</span>   <span class="o">=</span> <span class="s2">"name"</span>
+    <span class="nx">values</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"al2023-ami-*"</span><span class="p">]</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">output</span> <span class="s2">"public_ip"</span> <span class="p">{</span>
+  <span class="nx">value</span>     <span class="o">=</span> <span class="nx">aws_instance</span><span class="p">.</span><span class="nx">web</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">public_ip</span>
+  <span class="nx">sensitive</span> <span class="o">=</span> <span class="kc">false</span>
+<span class="p">}</span>

@@ -1,0 +1,45 @@
+<span class="cs">      * a fixed-form comment in the indicator column</span><span class="w">
+       </span><span class="kd">IDENTIFICATION</span><span class="w"> </span><span class="kd">DIVISION</span><span class="p">.</span><span class="w">
+       </span><span class="k">PROGRAM-ID</span><span class="p">.</span><span class="w"> </span><span class="n">HELLO</span><span class="p">.</span><span class="w">
+       </span><span class="k">AUTHOR</span><span class="p">.</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="n">Programmer</span><span class="p">.</span><span class="w">
+
+       </span><span class="kd">ENVIRONMENT</span><span class="w"> </span><span class="kd">DIVISION</span><span class="p">.</span><span class="w">
+       </span><span class="kn">CONFIGURATION</span><span class="w"> </span><span class="kn">SECTION</span><span class="p">.</span><span class="w">
+       </span><span class="k">SOURCE-COMPUTER</span><span class="p">.</span><span class="w"> </span><span class="n">IBM-370</span><span class="p">.</span><span class="w">
+
+       </span><span class="kd">DATA</span><span class="w"> </span><span class="kd">DIVISION</span><span class="p">.</span><span class="w">
+       </span><span class="kn">WORKING-STORAGE</span><span class="w"> </span><span class="kn">SECTION</span><span class="p">.</span><span class="w">
+       </span><span class="m">01</span><span class="w">  </span><span class="n">WS-COUNTER</span><span class="w">      </span><span class="k">PIC</span><span class="w"> </span><span class="m">9</span><span class="p">(</span><span class="m">4</span><span class="p">)</span><span class="w"> </span><span class="k">VALUE</span><span class="w"> </span><span class="k">ZERO</span><span class="p">.</span><span class="w">
+       </span><span class="m">01</span><span class="w">  </span><span class="n">WS-RATE</span><span class="w">         </span><span class="k">PIC</span><span class="w"> </span><span class="m">9</span><span class="p">(</span><span class="m">3</span><span class="p">)</span><span class="n">V99</span><span class="w"> </span><span class="k">VALUE</span><span class="w"> </span><span class="m">12.50</span><span class="p">.</span><span class="w">
+       </span><span class="m">01</span><span class="w">  </span><span class="n">WS-NAME</span><span class="w">         </span><span class="k">PIC</span><span class="w"> </span><span class="n">X</span><span class="p">(</span><span class="m">20</span><span class="p">)</span><span class="w"> </span><span class="k">VALUE</span><span class="w"> </span><span class="s2">"</span><span class="s">A </span><span class="se">\"</span><span class="s">quoted</span><span class="se">\"</span><span class="s"> name</span><span class="s2">"</span><span class="p">.</span><span class="w">
+       </span><span class="m">01</span><span class="w">  </span><span class="n">WS-OTHER</span><span class="w">        </span><span class="k">PIC</span><span class="w"> </span><span class="n">X</span><span class="p">(</span><span class="m">10</span><span class="p">)</span><span class="w"> </span><span class="k">VALUE</span><span class="w"> </span><span class="s1">'</span><span class="s">single</span><span class="s1">'</span><span class="p">.</span><span class="w">
+       </span><span class="m">01</span><span class="w">  </span><span class="n">WS-FLAG</span><span class="w">         </span><span class="k">PIC</span><span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="k">VALUE</span><span class="w"> </span><span class="s1">'</span><span class="s">Y</span><span class="s1">'</span><span class="p">.</span><span class="w">
+       </span><span class="m">01</span><span class="w">  </span><span class="n">WS-TOTAL</span><span class="w">        </span><span class="k">PIC</span><span class="w"> </span><span class="n">S9</span><span class="p">(</span><span class="m">5</span><span class="p">)</span><span class="w"> </span><span class="k">VALUE</span><span class="w"> </span><span class="m">-42</span><span class="p">.</span><span class="w">
+
+       </span><span class="kn">LINKAGE</span><span class="w"> </span><span class="kn">SECTION</span><span class="p">.</span><span class="w">
+       </span><span class="m">01</span><span class="w">  </span><span class="n">LS-PARM</span><span class="w">         </span><span class="k">PIC</span><span class="w"> </span><span class="n">X</span><span class="p">(</span><span class="m">8</span><span class="p">).</span><span class="w">
+
+       </span><span class="kd">PROCEDURE</span><span class="w"> </span><span class="kd">DIVISION</span><span class="p">.</span><span class="w">
+       </span><span class="n">MAIN-PARA</span><span class="p">.</span><span class="w">
+           </span><span class="k">DISPLAY</span><span class="w"> </span><span class="s2">"</span><span class="s">Hello, world</span><span class="s2">"</span><span class="p">.</span><span class="w">
+           </span><span class="k">MOVE</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="n">WS-COUNTER</span><span class="p">.</span><span class="w">
+           </span><span class="k">COMPUTE</span><span class="w"> </span><span class="n">WS-TOTAL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WS-COUNTER</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">WS-RATE</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">1</span><span class="p">.</span><span class="w">
+           </span><span class="k">IF</span><span class="w"> </span><span class="n">WS-COUNTER</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">WS-FLAG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'</span><span class="s">Y</span><span class="s1">'</span><span class="w">
+               </span><span class="k">PERFORM</span><span class="w"> </span><span class="k">VARYING</span><span class="w"> </span><span class="n">WS-COUNTER</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="m">1</span><span class="w">
+                   </span><span class="k">UNTIL</span><span class="w"> </span><span class="n">WS-COUNTER</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">10</span><span class="w">
+                   </span><span class="k">ADD</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="n">WS-TOTAL</span><span class="w">
+               </span><span class="k">END-PERFORM</span><span class="w">
+           </span><span class="k">ELSE</span><span class="w">
+               </span><span class="k">SUBTRACT</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">WS-TOTAL</span><span class="w">
+           </span><span class="k">END-IF</span><span class="p">.</span><span class="w">
+     </span><span class="cs">      *&gt; a free-form comment</span><span class="w">
+</span><span class="cs">      * an operator immediately before a word, which the word rule declines</span><span class="w">
+           </span><span class="k">COMPUTE</span><span class="w"> </span><span class="n">WS-TOTAL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">ABC</span><span class="p">.</span><span class="w">
+           </span><span class="k">EVALUATE</span><span class="w"> </span><span class="k">TRUE</span><span class="w">
+               </span><span class="k">WHEN</span><span class="w"> </span><span class="n">WS-TOTAL</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="m">0</span><span class="w">
+                   </span><span class="k">DISPLAY</span><span class="w"> </span><span class="s2">"</span><span class="s">negative</span><span class="s2">"</span><span class="w">
+               </span><span class="k">WHEN</span><span class="w"> </span><span class="k">OTHER</span><span class="w">
+                   </span><span class="k">DISPLAY</span><span class="w"> </span><span class="s2">"</span><span class="s">non-negative</span><span class="s2">"</span><span class="w">
+           </span><span class="k">END-EVALUATE</span><span class="p">.</span><span class="w">
+           </span><span class="k">STOP</span><span class="w"> </span><span class="k">RUN</span><span class="p">.</span><span class="w">
+</span>

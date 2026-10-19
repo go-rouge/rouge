@@ -68,6 +68,14 @@ var goldenCases = []struct {
 	{"ruby9.rb", "ruby"},
 	{"ruby10.rb", "ruby"},
 	{"ruby11.rb", "ruby"},
+	{"java.java", "java"},
+	{"c.c", "c"},
+	{"cpp.cpp", "cpp"},
+	{"rust.rs", "rust"},
+	{"cobol.cob", "cobol"},
+	{"fortran.f90", "fortran"},
+	{"hcl.hcl", "hcl"},
+	{"terraform.tf", "terraform"},
 }
 
 // TestGolden highlights each corpus file and compares the HTML to the gem-

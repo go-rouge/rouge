@@ -1,0 +1,50 @@
+<span class="c1">// a line comment</span>
+<span class="c1"># another line comment</span>
+<span class="cm">/* a block
+   comment */</span>
+
+<span class="nx">job</span> <span class="s2">"batch"</span> <span class="p">{</span>
+  <span class="nx">datacenters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"dc1"</span><span class="p">,</span> <span class="s2">"dc2"</span><span class="p">]</span>
+  <span class="nx">type</span>        <span class="o">=</span> <span class="s2">"batch"</span>
+  <span class="nx">priority</span>    <span class="o">=</span> <span class="mi">50</span>
+  <span class="nx">weight</span>      <span class="o">=</span> <span class="mf">1.5</span>
+  <span class="nx">big</span>         <span class="o">=</span> <span class="mi">10mb</span>
+  <span class="nx">enabled</span>     <span class="o">=</span> <span class="kc">true</span>
+  <span class="nx">disabled</span>    <span class="o">=</span> <span class="kc">false</span>
+  <span class="nx">nothing</span>     <span class="o">=</span> <span class="kc">null</span>
+
+  <span class="nx">meta</span> <span class="p">{</span>
+    <span class="nx">owner</span> <span class="o">=</span> <span class="s2">"team"</span>
+    <span class="nx">note</span>  <span class="o">=</span> <span class="s1">'single quoted'</span>
+  <span class="p">}</span>
+
+  <span class="nx">group</span> <span class="s2">"workers"</span> <span class="p">{</span>
+    <span class="nx">count</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="nx">task</span> <span class="s2">"run"</span> <span class="p">{</span>
+      <span class="nx">driver</span> <span class="o">=</span> <span class="s2">"docker"</span>
+
+      <span class="nx">config</span> <span class="p">{</span>
+        <span class="nx">image</span>   <span class="o">=</span> <span class="s2">"alpine:3"</span>
+        <span class="nx">command</span> <span class="o">=</span> <span class="s2">"/bin/sh"</span>
+        <span class="nx">args</span>    <span class="o">=</span> <span class="p">[</span><span class="s2">"-c"</span><span class="p">,</span> <span class="s2">"echo hi"</span><span class="p">]</span>
+      <span class="p">}</span>
+
+      <span class="nx">resources</span> <span class="p">{</span>
+        <span class="nx">cpu</span>    <span class="o">=</span> <span class="mi">500</span>
+        <span class="nx">memory</span> <span class="o">=</span> <span class="mi">256</span>
+      <span class="p">}</span>
+
+      <span class="nx">template</span> <span class="p">{</span>
+        <span class="nx">data</span> <span class="o">=</span> <span class="o">&lt;&lt;</span><span class="nx">EOF</span>
+<span class="nx">a</span> <span class="nx">here</span> <span class="nx">document</span>
+<span class="nx">with</span> <span class="nx">$dollars</span> <span class="nx">and</span> <span class="nx">$</span><span class="p">{</span><span class="nx">braces</span><span class="p">}</span>
+<span class="nx">EOF</span>
+      <span class="err">}</span>
+
+      <span class="nx">quoted</span> <span class="o">=</span> <span class="o">&lt;&lt;-</span><span class="s1">'END'</span>
+  <span class="nx">indented</span> <span class="nx">and</span> <span class="nx">quoted</span>
+  <span class="nx">END</span>
+    <span class="err">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>

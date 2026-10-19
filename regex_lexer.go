@@ -104,8 +104,9 @@ type lexState struct {
 	stack []*stateDef
 	null  int
 	out   []TokenValue
-	// heredocStr holds the active here-document terminator for the Shell lexer's
-	// heredoc states; empty when none is active.
+	// heredocStr holds the active here-document terminator for the Shell and
+	// HCL lexers' heredoc states; empty when none is active. One field serves
+	// both because a lexState belongs to a single Lex of a single lexer.
 	heredocStr string
 	// strReg is the f-string / quoted-string register stack used by the Python
 	// lexer (each entry is a [type, delim] pair), mirroring its StringRegister.
@@ -122,6 +123,34 @@ type lexState struct {
 	// @heredoc_queue): each entry is a (tolerant, terminator) pair awaiting its
 	// body after the current line.
 	heredocQueue []heredocEntry
+	// macroDelims counts the macro delimiters the Rust lexer has opened and not
+	// yet closed (the gem's @macro_delims), one counter per closing delimiter.
+	// The gem seeds it in `start`; here it is created on first use, which is the
+	// same thing because every counter starts at zero and a lexState is fresh
+	// for each Lex.
+	macroDelims map[string]int
+}
+
+// macroDelim returns the Rust macro-delimiter counters, creating them on first
+// use. One place does the nil check, because doing it at both call sites leaves
+// the second one unreachable: a macro is entered on `name!`, so the opening
+// delimiter is always seen before a closing one.
+func (ls *lexState) macroDelim() map[string]int {
+	if ls.macroDelims == nil {
+		ls.macroDelims = map[string]int{"]": 0, ")": 0, "}": 0}
+	}
+	return ls.macroDelims
+}
+
+// macroClosed reports whether every Rust macro delimiter opened so far has been
+// closed (the gem's macro_closed?).
+func (ls *lexState) macroClosed() bool {
+	for _, n := range ls.macroDelims {
+		if n != 0 {
+			return false
+		}
+	}
+	return true
 }
 
 // heredocEntry is one queued Ruby here-document: tolerant is true for <<- / <<~

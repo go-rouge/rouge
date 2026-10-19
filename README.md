@@ -81,6 +81,14 @@ compared **byte-for-byte** to the gem's HTML (the `*.html` goldens).
 | Markdown | `markdown`, `md`, `mkd` | delegates fenced code to the named lexer, frontmatter to YAML |
 | SQL | `sql` | case-insensitive keyword/type sets |
 | PHP | `php`, `php3`, `php4`, `php5` | `start_inline` option, `<?php`/`<?=` template delegation to HTML, string interpolation, heredocs, enums, function/property-hook sub-states |
+| Java | `java` | text blocks, annotations, method signatures (the gem delegates the return arguments to Java itself), all four numeric bases with `_` separators |
+| C | `c` | preprocessor states (`#if 0`, `#include <>`/`""`, macro continuation), labels, function-signature recursion |
+| C++ | `cpp`, `c++` | C plus templates, raw strings with a delimiter backreference, `'` digit separators, `<=>`, `::`-aware `case` |
+| Rust | `rust`, `rs`, `rust,no_run`, `rs,no_run`, `rust,ignore`, `rs,ignore`, `rust,should_panic`, `rs,should_panic` | nesting doc/plain block comments that keep the OUTER kind, macro delimiter counting, raw strings, `rustc` shebang detector |
+| COBOL | `cobol` | divisions, sections and the IBM z/OS reserved-word list; fixed-form and `*>` comments |
+| Fortran | `fortran` | Fortran 2008 free form: kind parameters, `B`/`O`/`Z` literals, `.EQ.`-style operator words, two-word keywords, `FORMAT` state |
+| HCL | `hcl` | Hashicorp Configuration Language (`*.hcl`, `*.nomad`) |
+| Terraform | `terraform`, `tf` | HCL plus `${…}` interpolation, regex literals, `var`/`local` declarations |
 | PlainText | `plaintext`, `text` | fallback |
 
 **Documented simplifications** (honest deviations from the gem):
@@ -96,6 +104,31 @@ compared **byte-for-byte** to the gem's HTML (the `*.html` goldens).
 - **Guess** uses each lexer's content detector only (a subset of the gem's
   multi-signal guesser) — enough for the unambiguous formats (diff, YAML,
   shebangs, doctype).
+- **COBOL and Fortran** drop the leading `^` of three rules, and COBOL drops a
+  `(?<![\w-])` guard, because in the gem **neither assertion constrains
+  anything**. Rouge scans with `StringScanner#skip`, where both are evaluated
+  as though the scan pointer were the start of the string. Measured against
+  rouge 5.0.0: `X      * c` gives `Comment::Special` for `      * c`
+  immediately after the `X`; `selected_real_kind(15, 307)` gives `Name::Label`
+  for both numbers, from Fortran's `^(\s*)([0-9]+)\b` statement-label rule; and
+  `= -ABC.` gives `Name` then `Punctuation`, not a declined match. This engine
+  anchors every rule with `\G` and evaluates `^` and lookbehind against the
+  real buffer, so transcribing them literally makes the rules unreachable. `\G`
+  alone already says "at the scan position", which is what the gem's
+  assertions amount to.
+- **HCL** does not carry the gem's here-document rule or its `:heredoc` /
+  `:heredoc_nl` states, because the gem cannot reach them: `hcl.rb` lists the
+  operator class `[-+*\/!%&<>|=:?]` — which contains `<` — *before* the
+  `(<<-?)…` rule, so `<<EOF` is consumed as two operators and a name. Measured:
+  `testdata/hcl.hcl` carries two here-documents and the gem's own golden for it
+  contains zero `Str::Heredoc` and zero `Name::Constant` spans. If upstream
+  reorders those rules, the states go back.
+- **Rust** uses `[\p{L}\p{Nl}_]` and `\p{Word}` where the gem writes
+  `\p{XID_Start}` and `\p{XID_Continue}`, which this engine does not provide.
+  `\p{Word}` is Ruby's `\p{L}\p{M}\p{N}\p{Pc}`, a superset of XID_Continue and
+  the same set for any identifier a program can carry; the Rust corpus includes
+  non-ASCII identifiers so the substitution is checked against the gem rather
+  than assumed.
 - **PHP** does not model `funcnamehighlighting` (the gem's built-in-function
   table promoting known calls to `Name.Builtin`); calls render as `Name.Function`,
   exactly as the gem does with `funcnamehighlighting:false`, the configuration the

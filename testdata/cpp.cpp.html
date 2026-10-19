@@ -1,0 +1,66 @@
+<span class="c1">// a single-line comment</span>
+<span class="cp">#include</span> <span class="cpf">&lt;string&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;vector&gt;</span><span class="cp">
+</span>
+<span class="k">namespace</span> <span class="n">app</span> <span class="p">{</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N</span><span class="p">&gt;</span>
+<span class="k">class</span> <span class="nc">Buffer</span> <span class="k">final</span> <span class="p">{</span>
+<span class="nl">public:</span>
+    <span class="k">explicit</span> <span class="n">Buffer</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span> <span class="o">&amp;</span><span class="n">init</span><span class="p">)</span> <span class="k">noexcept</span> <span class="o">:</span> <span class="n">value_</span><span class="p">(</span><span class="n">init</span><span class="p">)</span> <span class="p">{}</span>
+    <span class="k">virtual</span> <span class="o">~</span><span class="n">Buffer</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+    <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">size</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">N</span><span class="p">;</span> <span class="p">}</span>
+
+    <span class="k">auto</span> <span class="k">operator</span><span class="o">&lt;=&gt;</span><span class="p">(</span><span class="k">const</span> <span class="n">Buffer</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">const</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+<span class="k">private</span><span class="o">:</span>
+    <span class="n">T</span> <span class="n">value_</span><span class="p">;</span>
+    <span class="k">static</span> <span class="kr">inline</span> <span class="kt">int</span> <span class="n">count_</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="nc">Point</span> <span class="p">{</span> <span class="kt">int</span> <span class="n">x</span><span class="p">;</span> <span class="kt">int</span> <span class="n">y</span><span class="p">;</span> <span class="p">};</span>
+
+<span class="k">enum</span> <span class="k">class</span> <span class="nc">Colour</span> <span class="o">:</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="p">{</span> <span class="n">Red</span><span class="p">,</span> <span class="n">Green</span><span class="p">,</span> <span class="n">Blue</span> <span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">classify</span><span class="p">(</span><span class="n">Colour</span> <span class="n">c</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="n">Colour</span><span class="o">::</span><span class="n">Red</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">case</span> <span class="n">Colour</span><span class="o">::</span><span class="n">Green</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="nl">default:</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">demo</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">auto</span> <span class="n">million</span> <span class="o">=</span> <span class="mi">1'000'000</span><span class="p">;</span>
+    <span class="k">auto</span> <span class="n">big</span> <span class="o">=</span> <span class="mh">0xdead'beefu</span><span class="p">;</span>
+    <span class="k">auto</span> <span class="n">bits</span> <span class="o">=</span> <span class="mb">0b1010'1010</span><span class="p">;</span>
+    <span class="k">auto</span> <span class="n">oct</span> <span class="o">=</span> <span class="mi">0'755</span><span class="p">;</span>
+    <span class="k">auto</span> <span class="n">pi</span> <span class="o">=</span> <span class="mf">3.141'592f</span><span class="p">;</span>
+    <span class="k">auto</span> <span class="n">sci</span> <span class="o">=</span> <span class="mf">1'0e-3</span><span class="p">;</span>
+    <span class="k">auto</span> <span class="n">wait</span> <span class="o">=</span> <span class="mx">100ms</span><span class="p">;</span>
+    <span class="k">auto</span> <span class="n">angle</span> <span class="o">=</span> <span class="mx">90s</span><span class="p">;</span>
+    <span class="k">auto</span> <span class="n">imag</span> <span class="o">=</span> <span class="mx">2i</span><span class="p">;</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">raw</span> <span class="o">=</span> <span class="s">R"delim(no \escapes "here" at all)delim"</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">plain</span> <span class="o">=</span> <span class="s">"with </span><span class="se">\"</span><span class="s">escapes</span><span class="se">\"</span><span class="s"> and </span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
+    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="nb">nullptr</span><span class="p">;</span>
+
+    <span class="k">auto</span> <span class="o">*</span><span class="n">q</span> <span class="o">=</span> <span class="k">dynamic_cast</span><span class="o">&lt;</span><span class="n">Buffer</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="mi">4</span><span class="o">&gt;</span> <span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">q</span> <span class="o">!=</span> <span class="nb">nullptr</span> <span class="o">&amp;&amp;</span> <span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">delete</span> <span class="n">q</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">try</span> <span class="p">{</span>
+        <span class="k">throw</span> <span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="p">(</span><span class="s">"boom"</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="o">&amp;</span><span class="n">e</span><span class="p">)</span> <span class="p">{</span>
+        <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">e</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="p">}</span> <span class="c1">// namespace app</span>
