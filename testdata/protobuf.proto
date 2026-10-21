@@ -1,0 +1,75 @@
+// A protocol buffer schema exercising the lexer's rules.
+syntax = "proto3";
+
+package tutorial.v1;
+
+import "google/protobuf/timestamp.proto";
+import public "other.proto";
+
+option java_package = 'com.example.tutorial';
+option optimize_for = SPEED;
+
+/* A multi-line comment
+   spanning two lines. */
+
+message Person {
+  required string name = 1;
+  required int32 id = 2;
+  optional string email = 3;
+  repeated PhoneNumber phones = 4 [packed = true];
+
+  enum PhoneType {
+    MOBILE = 0;
+    HOME = 1;
+    WORK = 2;
+  }
+
+  message PhoneNumber {
+    optional string number = 1;
+    optional PhoneType type = 2 [default = HOME];
+  }
+
+  oneof contact {
+    string nickname = 10;
+    uint64 handle = 11;
+  }
+
+  extensions 100 to max;
+
+  double ratio = 20;
+  float share = 21;
+  bool active = 22;
+  bytes blob = 23;
+  fixed32 a = 24;
+  fixed64 b = 25;
+  sfixed32 c = 26;
+  sfixed64 d = 27;
+  sint32 e = 28;
+  sint64 f = 29;
+  uint32 g = 30;
+  int64 h = 31;
+}
+
+extend Person {
+  optional int32 extra = 1000;
+}
+
+group Result = 1 {
+  optional string url = 2;
+}
+
+service AddressBook {
+  rpc Lookup (Person) returns (Person);
+}
+
+message Numbers {
+  optional double exp = 1 [default = 1.5e10];
+  optional double neg = 2 [default = -inf];
+  optional double nan_value = 3 [default = nan];
+  optional float frac = 4 [default = .25];
+  optional float whole = 5 [default = 3f];
+  optional int32 hex = 6 [default = 0x1FuL];
+  optional int32 oct = 7 [default = 0755L];
+  optional int32 dec = 8 [default = 42u];
+  optional bool flag = 9 [default = false];
+}

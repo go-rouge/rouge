@@ -10,10 +10,20 @@ import (
 	onigmo "github.com/go-ruby-regexp/regexp"
 )
 
-// --- JavaScript ---
-// A faithful transcription of Rouge::Lexers::Javascript (rouge 5.0.0), including
-// its regex / template-string / object-literal / ternary state machine. The
-// keyword / declaration / reserved / constant / builtin word sets are the gem's.
+// --- JavaScript, and the family built on it ---
+// A faithful transcription of Rouge::Lexers::Javascript (rouge 5.0.0),
+// including its regex / template-string / object-literal / ternary state
+// machine. The keyword / declaration / reserved / constant / builtin word sets
+// are the gem's.
+//
+// The gem writes `class JSX < Javascript`, `class Typescript < Javascript` and
+// `class TSX < JSX`, where the subclasses widen the word sets and use
+// `prepend :state` to put rules IN FRONT of the inherited ones. Go has no such
+// inheritance, so the shared machine is built here by buildJavascript, which
+// takes the word sets and the hooks a subclass would use. JavaScript passes no
+// hooks; TypeScript, JSX and TSX (lexers_typescript.go) pass the ones the gem
+// gives them. One builder is what makes "TSX is JSX plus these rules" a fact
+// about the code rather than a claim in a comment.
 
 var jsKeywords = stringSet(`async await break case catch continue debugger
 default delete do else export finally from for if import in instanceof new of
@@ -38,19 +48,39 @@ ArrayBuffer`)
 // jsID is the gem's id_regex: /[\p{L}\p{Nl}$_][\p{Word}]*/.
 const jsID = `[\p{L}\p{Nl}$_][\p{Word}]*`
 
-var javascriptLexer = func() *RegexLexer {
-	b := newRegexLexer("javascript", "JavaScript", "js")
-	b.filenames("*.cjs", "*.js", "*.mjs")
-	b.detectWith(func(text string) bool {
-		if strings.HasPrefix(text, "#!") {
-			line := text
-			if nl := strings.IndexByte(text, '\n'); nl >= 0 {
-				line = text[:nl]
-			}
-			return strings.Contains(line, "node") || strings.Contains(line, "jsc")
-		}
-		return false
-	})
+// jsOpts carries what a JavaScript-family lexer differs in.
+type jsOpts struct {
+	tag      string
+	title    string
+	aliases  []string
+	filename []string
+
+	keywords     map[string]bool
+	declarations map[string]bool
+	reserved     map[string]bool
+	constants    map[string]bool
+	builtins     map[string]bool
+
+	// detect is the content sniffer (the gem's self.detect?).
+	detect func(string) bool
+	// startPush is the gem's `start do push :x end`.
+	startPush []string
+	// prependRoot, prependExprStart and prependStatement add rules at the
+	// FRONT of those states, which is what the gem's `prepend` does.
+	prependRoot      func(b *lexerBuilder)
+	prependExprStart func(b *lexerBuilder)
+	prependStatement func(b *lexerBuilder)
+	// extraStates defines states only a subclass has.
+	extraStates func(b *lexerBuilder)
+}
+
+func buildJavascript(o jsOpts) *RegexLexer {
+	b := newRegexLexer(o.tag, o.title, o.aliases...)
+	b.filenames(o.filename...)
+	if o.detect != nil {
+		b.detectWith(o.detect)
+	}
+	b.start(o.startPush...)
 
 	b.state("multiline_comment").
 		rule(`[*]/`, CommentMultiline, pop()).
@@ -63,8 +93,11 @@ var javascriptLexer = func() *RegexLexer {
 		rule(`//.*?$`, CommentSingle).
 		rule(`/[*]`, CommentMultiline, push("multiline_comment"))
 
-	b.state("expr_start").
-		mixin("comments_and_whitespace").
+	b.state("expr_start")
+	if o.prependExprStart != nil {
+		o.prependExprStart(b)
+	}
+	b.mixin("comments_and_whitespace").
 		cb(`/`, func(l *lexState, m *onigmo.MatchData) {
 			l.emit(LiteralStringRegex, m.Str(0))
 			l.pos = m.End(0)
@@ -111,8 +144,11 @@ var javascriptLexer = func() *RegexLexer {
 	b.state("bad_regex").
 		rule(`[^\n]+`, Error, pop())
 
-	b.state("root").
-		rule(`(?m)\A\s*#!.*?\n`, CommentPreproc, push("statement")).
+	b.state("root")
+	if o.prependRoot != nil {
+		o.prependRoot(b)
+	}
+	b.rule(`(?m)\A\s*#!.*?\n`, CommentPreproc, push("statement")).
 		rule(`(?<=\n)(?=\s|/|<!--)`, Text, push("expr_start")).
 		mixin("comments_and_whitespace").
 		rule(`(?x)\+\+ | -- | ~ | \?\?=? | && | \|\| | \\(?=\n) | << | >>>? | === | !== `, Operator, push("expr_start")).
@@ -134,7 +170,7 @@ var javascriptLexer = func() *RegexLexer {
 		groupsRule(`(function)((?:\s|\\\s)+)(`+jsID+`)`, KeywordDeclaration, Text, NameFunction).
 		rule(`function(?=(?:\(.*\)))`, KeywordDeclaration).
 		cb(`(?m)(#?`+jsID+`)[ \t]*(?=(?:\(.*\)))`, func(l *lexState, m *onigmo.MatchData) {
-			if jsKeywords[m.Str(1)] {
+			if o.keywords[m.Str(1)] {
 				l.emit(Keyword, m.Str(0))
 			} else {
 				l.emit(NameFunction, m.Str(0))
@@ -145,21 +181,21 @@ var javascriptLexer = func() *RegexLexer {
 		cb(`#?`+jsID, func(l *lexState, m *onigmo.MatchData) {
 			w := m.Str(0)
 			switch {
-			case jsKeywords[w]:
+			case o.keywords[w]:
 				l.emit(Keyword, w)
 				l.pos = m.End(0)
 				l.push("expr_start")
 				return
-			case jsDeclarations[w]:
+			case o.declarations[w]:
 				l.emit(KeywordDeclaration, w)
 				l.pos = m.End(0)
 				l.push("expr_start")
 				return
-			case jsReserved[w]:
+			case o.reserved[w]:
 				l.emit(KeywordReserved, w)
-			case jsConstants[w]:
+			case o.constants[w]:
 				l.emit(KeywordConstant, w)
-			case jsBuiltins[w]:
+			case o.builtins[w]:
 				l.emit(NameBuiltin, w)
 			default:
 				l.emit(NameOther, w)
@@ -189,15 +225,20 @@ var javascriptLexer = func() *RegexLexer {
 		groupsRule(`(`+jsID+`)((?:\s|\\\s)+)(extends)((?:\s|\\\s)+)`, NameClass, Text, KeywordDeclaration, Text).
 		rule(jsID, NameClass, pop())
 
-	b.state("statement").
-		cb(`case\b`, func(l *lexState, m *onigmo.MatchData) {
-			l.emit(Keyword, m.Str(0))
-			l.pos = m.End(0)
-			l.goTo("expr_start")
-		}).
+	// braced parts that aren't object literals
+	b.state("statement")
+	if o.prependStatement != nil {
+		o.prependStatement(b)
+	}
+	b.cb(`case\b`, func(l *lexState, m *onigmo.MatchData) {
+		l.emit(Keyword, m.Str(0))
+		l.pos = m.End(0)
+		l.goTo("expr_start")
+	}).
 		groupsRule(`(`+jsID+`)(\s*)(:)`, NameLabel, Text, Punctuation).
 		mixin("expr_start")
 
+	// object literals
 	b.state("object").
 		mixin("comments_and_whitespace").
 		cb(`[{]`, func(l *lexState, m *onigmo.MatchData) {
@@ -214,6 +255,7 @@ var javascriptLexer = func() *RegexLexer {
 		rule(`:`, Punctuation).
 		mixin("root")
 
+	// ternary expressions, where <id>: is not a label!
 	b.state("ternary").
 		cb(`:`, func(l *lexState, m *onigmo.MatchData) {
 			l.emit(Punctuation, m.Str(0))
@@ -222,6 +264,7 @@ var javascriptLexer = func() *RegexLexer {
 		}).
 		mixin("root")
 
+	// template strings
 	b.state("template_string").
 		rule(`[$]{`, Punctuation, push("template_string_expr")).
 		rule("`", LiteralStringDouble, pop()).
@@ -233,5 +276,30 @@ var javascriptLexer = func() *RegexLexer {
 		rule(`}`, Punctuation, pop()).
 		mixin("root")
 
+	if o.extraStates != nil {
+		o.extraStates(b)
+	}
 	return b.done()
-}()
+}
+
+var javascriptLexer = buildJavascript(jsOpts{
+	tag:          "javascript",
+	title:        "JavaScript",
+	aliases:      []string{"js"},
+	filename:     []string{"*.cjs", "*.js", "*.mjs"},
+	keywords:     jsKeywords,
+	declarations: jsDeclarations,
+	reserved:     jsReserved,
+	constants:    jsConstants,
+	builtins:     jsBuiltins,
+	detect: func(text string) bool {
+		if strings.HasPrefix(text, "#!") {
+			line := text
+			if nl := strings.IndexByte(text, '\n'); nl >= 0 {
+				line = text[:nl]
+			}
+			return strings.Contains(line, "node") || strings.Contains(line, "jsc")
+		}
+		return false
+	},
+})

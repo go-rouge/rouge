@@ -1,0 +1,15 @@
+<span class="c1">// JSX edge cases, kept apart from the readable corpus: a brace that opens</span>
+<span class="c1">// while the lexer is in :interpol rather than in an expression start, and a</span>
+<span class="c1">// nested brace that goes through :interpol_inner. Both are lexed by the</span>
+<span class="c1">// reference gem, so the golden is the gem's answer for them too.</span>
+<span class="kd">const</span> <span class="nx">odd</span> <span class="o">=</span> <span class="p">&lt;</span><span class="nt">div</span><span class="p">&gt;</span><span class="si">{</span><span class="nx">foo</span> <span class="p">{</span><span class="nx">bar</span><span class="p">}</span><span class="si">}</span><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;;</span>
+
+<span class="c1">// A fragment, a dotted component name, a self-closing tag with a quoted</span>
+<span class="c1">// attribute, and raw HTML text between the tags.</span>
+<span class="kd">const</span> <span class="nx">frag</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="p">&lt;&gt;</span>
+    <span class="p">&lt;</span><span class="nc">Ns</span><span class="p">.</span><span class="nc">Deep</span><span class="p">.</span><span class="nc">Component</span> <span class="na">name</span><span class="p">=</span><span class="s">'single'</span> <span class="na">other</span><span class="p">=</span><span class="s">"double"</span> <span class="na">flag</span> <span class="p">/&gt;</span>
+    plain <span class="ni">&amp;amp;</span> text <span class="p">&lt;</span><span class="nt">b</span><span class="p">&gt;</span>bold<span class="p">&lt;/</span><span class="nt">b</span><span class="p">&gt;</span>
+    <span class="si">{</span><span class="cm">/* a comment inside an interpolation */</span><span class="si">}</span>
+  <span class="p">&lt;/&gt;</span>
+<span class="p">);</span>

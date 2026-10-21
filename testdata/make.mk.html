@@ -1,0 +1,54 @@
+<span class="c"># A Makefile exercising the lexer's rules.
+</span><span class="k">include</span><span class="sx"> config.mk</span>
+<span class="k">-include</span><span class="sx"> optional.mk</span>
+
+<span class="nv">PREFIX</span> <span class="o">?=</span> /usr/local
+<span class="nv">CC</span> <span class="o">:=</span> gcc
+<span class="nv">CFLAGS</span> <span class="o">+=</span> <span class="nt">-Wall</span> <span class="nt">-O2</span>
+<span class="nv">SOURCES</span> <span class="o">=</span> <span class="p">$(</span>wildcard src/<span class="k">*</span>.c<span class="p">)</span>
+<span class="nv">OBJECTS</span> <span class="o">=</span> <span class="p">$(</span>patsubst src/%.c,build/%.o,<span class="p">$(</span>SOURCES<span class="p">))</span>
+<span class="nv">VERSION</span> <span class="o">:=</span> <span class="p">$(</span>shell git describe <span class="nt">--tags</span> 2&gt;/dev/null<span class="p">)</span>
+<span class="nv">HEADERS</span> <span class="o">=</span> <span class="p">$(</span>filter-out src/internal.h,<span class="p">$(</span>wildcard src/<span class="k">*</span>.h<span class="p">))</span>
+<span class="nv">SUBDIRS</span> <span class="o">=</span> <span class="p">$(</span>shell <span class="o">(</span><span class="nb">cd </span>src <span class="o">&amp;&amp;</span> <span class="nb">ls</span> <span class="nt">-d</span> <span class="k">*</span>/<span class="p">)</span><span class="o">)</span>
+<span class="nv">RENAMED</span> <span class="o">=</span> <span class="p">$(</span>subst <span class="o">{</span>old<span class="p">}</span>,<span class="o">{</span>new<span class="o">}</span>,<span class="p">$(</span>HEADERS<span class="p">)</span><span class="o">)</span>
+<span class="nv">QUOTED</span> <span class="o">=</span> <span class="s2">"a string"</span>
+<span class="nv">SINGLE</span> <span class="o">=</span> <span class="s1">'another string'</span>
+
+<span class="nf">$(</span><span class="nb">warning</span> <span class="o">(</span>nested<span class="p">)</span> build check<span class="p">)</span>
+
+<span class="k">export</span> <span class="nv">PATH</span>
+<span class="k">export </span><span class="nv">BUILD_DIR</span> <span class="o">=</span> build
+
+<span class="k">ifdef</span> <span class="nv">DEBUG</span>
+<span class="nv">CFLAGS</span> <span class="o">+=</span> <span class="nt">-g</span>
+<span class="k">else</span>
+<span class="nv">CFLAGS</span> <span class="o">+=</span> <span class="nt">-DNDEBUG</span>
+<span class="k">endif</span>
+
+<span class="k">ifeq</span> <span class="nv">($(OS),Windows_NT)</span>
+<span class="nv">EXT</span> <span class="o">=</span> .exe
+<span class="k">endif</span>
+
+<span class="nl">.PHONY</span><span class="o">:</span> <span class="nf">all clean install test</span>
+
+<span class="nl">all</span><span class="o">:</span> <span class="nf">$(OBJECTS)</span>
+	<span class="p">@</span><span class="nb">echo</span> <span class="s2">"building </span><span class="p">$(</span><span class="s2">VERSION</span><span class="p">)</span><span class="s2">"</span>
+	<span class="p">$(</span>CC<span class="p">)</span> <span class="p">$(</span>CFLAGS<span class="p">)</span> <span class="nt">-o</span> app<span class="p">$(</span>EXT<span class="p">)</span> <span class="p">$(</span>OBJECTS<span class="p">)</span>
+
+<span class="nl">build/%.o</span><span class="o">:</span> <span class="nf">src/%.c $(HEADERS)</span>
+	<span class="p">@</span><span class="nb">mkdir</span> <span class="nt">-p</span> <span class="p">$(</span><span class="nb">dir</span> <span class="nv">$@</span><span class="p">)</span>
+	<span class="p">$(</span>CC<span class="p">)</span> <span class="p">$(</span>CFLAGS<span class="p">)</span> <span class="nt">-c</span> <span class="nv">$&lt;</span> <span class="nt">-o</span> <span class="nv">$@</span>
+
+<span class="nl">test</span><span class="o">:</span> <span class="nf">all</span>
+	./app <span class="nt">--self-test</span> <span class="o">&amp;&amp;</span> <span class="nb">echo</span> <span class="s2">"ok"</span>
+
+<span class="nl">install</span><span class="o">:</span> <span class="nf">all</span>
+	<span class="nb">install</span> <span class="nt">-d</span> <span class="p">$(</span>DESTDIR<span class="p">)$(</span>PREFIX<span class="p">)</span>/bin
+	<span class="nb">install</span> <span class="nt">-m</span> 0755 app <span class="p">$(</span>DESTDIR<span class="p">)$(</span>PREFIX<span class="p">)</span>/bin/
+
+<span class="nl">clean</span><span class="o">:</span>
+	<span class="nb">rm</span> <span class="nt">-rf</span> build app<span class="p">$(</span>EXT<span class="p">)</span>
+
+<span class="k">define</span> <span class="nv">GREETING</span>
+<span class="err">hello</span> <span class="err">from</span> <span class="err">make</span>
+<span class="k">endef</span>

@@ -1,0 +1,29 @@
+<span class="c"># syntax=docker/dockerfile:1</span>
+<span class="k">FROM</span><span class="w"> </span><span class="s">golang:1.27-alpine</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="s">builder</span>
+
+<span class="k">LABEL</span><span class="s"> org.opencontainers.image.source="https://example.invalid/repo"</span>
+<span class="k">ARG</span><span class="s"> VERSION=dev</span>
+<span class="k">ENV</span><span class="s"> CGO_ENABLED=0 GOOS=linux</span>
+
+<span class="k">WORKDIR</span><span class="s"> /src</span>
+<span class="k">COPY</span><span class="s"> go.mod go.sum ./</span>
+<span class="k">RUN </span>go mod download
+
+<span class="k">COPY</span><span class="s"> . .</span>
+<span class="k">RUN </span><span class="nb">set</span> <span class="nt">-eux</span><span class="p">;</span> <span class="se">\
+</span>    go build <span class="nt">-trimpath</span> <span class="nt">-ldflags</span> <span class="s2">"-s -w -X main.version=</span><span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span><span class="s2">"</span> <span class="nt">-o</span> /out/app ./cmd/app<span class="p">;</span> <span class="se">\
+</span>    /out/app <span class="nt">--version</span>
+
+<span class="k">FROM</span><span class="s"> alpine:3.21</span>
+<span class="k">RUN </span>apk add <span class="nt">--no-cache</span> ca-certificates <span class="o">&amp;&amp;</span> <span class="se">\
+</span>    adduser <span class="nt">-D</span> <span class="nt">-u</span> 10001 app
+<span class="k">USER</span><span class="s"> app</span>
+<span class="k">COPY</span><span class="s"> --from=builder /out/app /usr/local/bin/app</span>
+<span class="k">VOLUME</span><span class="s"> ["/data"]</span>
+<span class="k">EXPOSE</span><span class="s"> 8080/tcp</span>
+<span class="k">STOPSIGNAL</span><span class="s"> SIGTERM</span>
+<span class="k">HEALTHCHECK</span><span class="s"> --interval=30s CMD ["app", "healthcheck"]</span>
+<span class="k">SHELL</span><span class="s"> ["/bin/sh", "-c"]</span>
+<span class="k">ONBUILD</span><span class="w"> </span><span class="k">COPY</span><span class="s"> . /app</span>
+<span class="k">ENTRYPOINT</span><span class="s"> ["app"]</span>
+<span class="k">CMD</span><span class="s"> ["--serve"]</span>

@@ -76,6 +76,18 @@ var goldenCases = []struct {
 	{"fortran.f90", "fortran"},
 	{"hcl.hcl", "hcl"},
 	{"terraform.tf", "terraform"},
+	{"toml.toml", "toml"},
+	{"xml.xml", "xml"},
+	{"xml2.svg", "xml"},
+	{"make.mk", "make"},
+	{"typescript.ts", "typescript"},
+	{"typescript2.ts", "typescript"},
+	{"jsx.jsx", "jsx"},
+	{"jsx2.jsx", "jsx"},
+	{"tsx.tsx", "tsx"},
+	{"tsx2.tsx", "tsx"},
+	{"docker.docker", "docker"},
+	{"protobuf.proto", "protobuf"},
 }
 
 // TestGolden highlights each corpus file and compares the HTML to the gem-

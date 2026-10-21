@@ -1,0 +1,55 @@
+# This is a TOML document.
+
+title = "TOML Example"
+quoted."dotted key" = 'literal'
+'single key' = 1
+
+[owner]
+name = "Tom Preston-Werner"
+dob = 1979-05-27T07:32:00Z
+wake = 07:32:00
+nap = 13:15:30.500
+
+[database]
+enabled = true
+disabled = false
+ports = [ 8000, 8001, 8002 ]
+data = [ ["delta", "phi"], [3.14] ]
+temp_targets = { cpu = 79.5, case = 72.0 }
+negative = -42
+plus = +99
+big = 1_000_000
+hexed = 0xDEAD_beef
+octal = 0o755
+binary = 0b1101_0110
+exponent = 5e+22
+tiny = 6.626e-34
+not_a_number = nan
+infinite = -inf
+
+[servers]
+
+[servers.alpha]
+ip = "10.0.0.1"
+role = "frontend"
+
+[[products]]
+name = "Hammer"
+sku = 738594937
+
+[[products]]
+name = "Nail"
+color = "gray"
+
+[strings]
+basic = "I'm a string. \"You can quote me\". Name\tJos\\u00E9\nLocation\tSF."
+multi = """
+Roses are red
+Violets are blue"""
+literal = 'C:\Users\nodejs\templates'
+multi_literal = '''
+The first newline is
+trimmed in raw strings.
+   All other whitespace
+   is preserved.
+'''

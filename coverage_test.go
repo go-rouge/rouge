@@ -53,6 +53,9 @@ func TestRubyCoverageEdges(t *testing.T) {
 		"class \n",                          // classname: whitespace then EOF -> empty pop arm
 		"x = <<E\nbody no terminator\n",     // heredoc with no terminator -> test_heredoc empty pop
 		"x = a ? b\n",                       // ternary without ':' -> root mixin then queue pop
+		"x = <<E\n#not the end\nE\n",        // heredoc body line opening with '#' (test_heredoc pop arm)
+		"x = <<E\n\\esc\nE\n",               // heredoc body line opening with a backslash
+		"obj.foo\v bar\n",                   // method_call_spaced: whitespace inline_whitespace declines
 	} {
 		reconstruct(t, rubyLexer, src)
 	}
@@ -83,6 +86,14 @@ func TestYAMLCoverageEdges(t *testing.T) {
 		"a: |9\n  \n         deep\n",    // explicit indent > blank-line width (indentMark clamp)
 		"a: |-5\n  text\n",              // block-scalar header digit in the second group
 		"a: |+2\n  text\n",              // chomping "+" then an indent digit (second group)
+		"a:\n  - \n",                    // an indicator with a blank rest of line
+		"a:\n  - - x\n",                 // a second indicator right after the first
+		"a:\n  ? \n  : \n",              // explicit key/value indicators, blank rests
+		// A second sign: `[|>][+-]?` eats `|+`, so the header itself starts at
+		// `-2`, its first alternative cannot match, and the indent digit lands
+		// in the SECOND capture group. With one sign it never does -- the
+		// opener has already taken it.
+		"a: |+-2\n  text\n",
 	} {
 		reconstruct(t, yamlLexer, src)
 	}

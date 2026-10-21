@@ -1,0 +1,69 @@
+<span class="c1">// A TypeScript module exercising the lexer's rules.</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">readFile</span> <span class="kd">as </span><span class="nx">read</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">node:fs/promises</span><span class="dl">"</span><span class="p">;</span>
+<span class="k">export</span> <span class="p">{</span> <span class="nx">Store</span> <span class="kd">as </span><span class="k">default</span> <span class="p">};</span>
+
+<span class="kd">type</span> <span class="nx">Primitive</span> <span class="o">=</span> <span class="kr">string</span> <span class="o">|</span> <span class="kr">number</span> <span class="o">|</span> <span class="nx">boolean</span> <span class="o">|</span> <span class="kc">null</span> <span class="o">|</span> <span class="kc">undefined</span><span class="p">;</span>
+
+<span class="kr">interface</span> <span class="nx">Person</span> <span class="p">{</span>
+  <span class="k">readonly</span> <span class="nx">name</span><span class="p">:</span> <span class="kr">string</span><span class="p">;</span>
+  <span class="nl">age</span><span class="p">?:</span> <span class="kr">number</span><span class="p">;</span>
+  <span class="nf">greet</span><span class="p">(</span><span class="nx">other</span><span class="p">:</span> <span class="nx">Person</span><span class="p">):</span> <span class="k">void</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kr">declare</span> <span class="kr">module</span> <span class="dl">"</span><span class="s2">legacy</span><span class="dl">"</span> <span class="p">{</span>
+  <span class="k">export</span> <span class="kd">function</span> <span class="nf">old</span><span class="p">():</span> <span class="kr">any</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">namespace</span> <span class="nx">Geometry</span> <span class="p">{</span>
+  <span class="k">export</span> <span class="kd">const</span> <span class="nx">PI</span> <span class="o">=</span> <span class="mf">3.14159</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">Store</span><span class="o">&lt;</span><span class="nx">T</span> <span class="kd">extends</span> <span class="nx">Primitive</span><span class="o">&gt;</span> <span class="k">implements</span> <span class="nx">Iterable</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="k">private</span> <span class="na">items</span><span class="p">:</span> <span class="nx">T</span><span class="p">[]</span> <span class="o">=</span> <span class="p">[];</span>
+  <span class="k">protected</span> <span class="k">static</span> <span class="nx">instances</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  <span class="nf">constructor</span><span class="p">(</span><span class="k">public</span> <span class="na">label</span><span class="p">:</span> <span class="kr">string</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">Store</span><span class="p">.</span><span class="nx">instances</span><span class="o">++</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">get</span> <span class="nf">size</span><span class="p">():</span> <span class="kr">number</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">set</span> <span class="nf">size</span><span class="p">(</span><span class="na">_n</span><span class="p">:</span> <span class="kr">number</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nc">Error</span><span class="p">(</span><span class="dl">"</span><span class="s2">read only</span><span class="dl">"</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="o">*</span><span class="p">[</span><span class="nb">Symbol</span><span class="p">.</span><span class="nx">iterator</span><span class="p">]():</span> <span class="nx">Iterator</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="k">yield</span><span class="o">*</span> <span class="k">this</span><span class="p">.</span><span class="nx">items</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">async</span> <span class="nf">load</span><span class="p">(</span><span class="na">path</span><span class="p">:</span> <span class="kr">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="k">void</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">text</span> <span class="o">=</span> <span class="k">await</span> <span class="nf">read</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="p">{</span> <span class="na">encoding</span><span class="p">:</span> <span class="dl">"</span><span class="s2">utf8</span><span class="dl">"</span> <span class="p">});</span>
+    <span class="kd">const</span> <span class="nx">parsed</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nf">parse</span><span class="p">(</span><span class="nx">text</span><span class="p">)</span> <span class="kd">as </span><span class="nx">T</span><span class="p">[];</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">items</span> <span class="o">=</span> <span class="nx">parsed</span> <span class="o">??</span> <span class="p">[];</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">const</span> <span class="nx">cat</span> <span class="o">=</span> <span class="p">{</span> <span class="na">name</span><span class="p">:</span> <span class="dl">"</span><span class="s2">Garfield</span><span class="dl">"</span> <span class="p">}</span> <span class="kd">satisfies </span><span class="nx">Person</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">spread</span> <span class="o">=</span> <span class="p">{</span> <span class="p">...</span><span class="nx">cat</span> <span class="p">}</span> <span class="kd">as const</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">maybe</span> <span class="o">=</span> <span class="nx">cat</span><span class="p">?.</span><span class="nx">name</span> <span class="o">??</span> <span class="dl">"</span><span class="s2">anonymous</span><span class="dl">"</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">label</span><span class="p">:</span> <span class="kr">keyof</span> <span class="nx">Person</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">name</span><span class="dl">"</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nf">isString</span><span class="p">(</span><span class="nx">value</span><span class="p">:</span> <span class="nx">unknown</span><span class="p">):</span> <span class="nx">value</span> <span class="k">is</span> <span class="kr">string</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="k">typeof</span> <span class="nx">value</span> <span class="o">===</span> <span class="dl">"</span><span class="s2">string</span><span class="dl">"</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">const</span> <span class="nx">re</span> <span class="o">=</span> <span class="sr">/^</span><span class="se">[</span><span class="sr">a-z</span><span class="se">][\w</span><span class="sr">-</span><span class="se">]</span><span class="sr">*$/giu</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">tpl</span> <span class="o">=</span> <span class="s2">`name=</span><span class="p">${</span><span class="nx">cat</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="s2"> age=</span><span class="p">${(</span><span class="nx">cat</span> <span class="kd">as </span><span class="kr">any</span><span class="p">).</span><span class="nx">age</span> <span class="o">??</span> <span class="mi">0</span><span class="p">}</span><span class="s2">`</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">hex</span> <span class="o">=</span> <span class="mh">0xFF</span><span class="p">,</span> <span class="nx">oct</span> <span class="o">=</span> <span class="mo">0o17</span><span class="p">,</span> <span class="nx">bin</span> <span class="o">=</span> <span class="mb">0b1010</span><span class="p">,</span> <span class="nx">flt</span> <span class="o">=</span> <span class="mf">1.5e3</span><span class="p">,</span> <span class="nx">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>
+
+<span class="k">switch </span><span class="p">(</span><span class="nx">label</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">case</span> <span class="dl">"</span><span class="s2">name</span><span class="dl">"</span><span class="p">:</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="nx">maybe</span><span class="p">,</span> <span class="nx">tpl</span><span class="p">,</span> <span class="nx">hex</span><span class="p">,</span> <span class="nx">oct</span><span class="p">,</span> <span class="nx">bin</span><span class="p">,</span> <span class="nx">flt</span><span class="p">,</span> <span class="nx">int</span><span class="p">,</span> <span class="nx">re</span><span class="p">.</span><span class="nf">test</span><span class="p">(</span><span class="nx">label</span><span class="p">));</span>
+    <span class="k">break</span><span class="p">;</span>
+  <span class="nl">default</span><span class="p">:</span>
+    <span class="k">break</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="kd">type</span> <span class="nx">Partialed</span> <span class="o">=</span> <span class="nb">Partial</span><span class="o">&lt;</span><span class="nb">Record</span><span class="o">&lt;</span><span class="kr">string</span><span class="p">,</span> <span class="nb">ReturnType</span><span class="o">&lt;</span><span class="k">typeof</span> <span class="nx">isString</span><span class="o">&gt;&gt;&gt;</span><span class="p">;</span>

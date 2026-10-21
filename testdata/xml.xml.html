@@ -1,0 +1,19 @@
+<span class="cp">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="cp">&lt;!DOCTYPE catalog SYSTEM "catalog.dtd"&gt;</span>
+<span class="c">&lt;!-- A catalogue, with a comment that has -- a dash inside it --&gt;</span>
+<span class="nt">&lt;catalog</span> <span class="na">xmlns:dc=</span><span class="s">"http://purl.org/dc/elements/1.1/"</span> <span class="na">count=</span><span class="s">'2'</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;book</span> <span class="na">id=</span><span class="s">"bk101"</span> <span class="err">available</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;dc:title</span> <span class="na">lang =</span> <span class="s">"en"</span><span class="nt">&gt;</span>XML Developer<span class="ni">&amp;apos;</span>s Guide <span class="ni">&amp;amp;</span> Companion<span class="nt">&lt;/dc:title&gt;</span>
+    <span class="nt">&lt;author&gt;</span>Gambardella, Matthew<span class="nt">&lt;/author&gt;</span>
+    <span class="nt">&lt;price</span> <span class="na">currency=</span><span class="s">"USD"</span><span class="nt">&gt;</span>44.95<span class="nt">&lt;/price&gt;</span>
+    <span class="nt">&lt;description&gt;</span><span class="cp">&lt;![CDATA[An in-depth look at &lt;creating&gt; applications]]&gt;</span><span class="nt">&lt;/description&gt;</span>
+    <span class="nt">&lt;reviewed/&gt;</span>
+  <span class="nt">&lt;/book&gt;</span>
+  <span class="nt">&lt;book</span> <span class="na">id=</span><span class="s">"bk102"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;dc:title&gt;</span>Midnight Rain<span class="nt">&lt;/dc:title&gt;</span>
+    <span class="nt">&lt;genre&gt;</span>Fantasy<span class="nt">&lt;/genre&gt;</span>
+    <span class="nt">&lt;note&gt;</span>Text with <span class="ni">&amp;#233;</span> an entity and a bare <span class="ni">&amp;lt;</span> escape.<span class="nt">&lt;/note&gt;</span>
+    <span class="nt">&lt;empty&gt;&lt;/empty&gt;</span>
+  <span class="nt">&lt;/book&gt;</span>
+  <span class="cp">&lt;?php echo "processing instruction"; ?&gt;</span>
+<span class="nt">&lt;/catalog&gt;</span>

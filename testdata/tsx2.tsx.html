@@ -1,0 +1,12 @@
+<span class="c1">// TSX edge cases: the two rules TSX prepends to :element_name -- a generic</span>
+<span class="c1">// type parameter list written `&lt;T,&gt;` (which TSX pops out of the element it had</span>
+<span class="c1">// started to open) and a `&lt;` that opens a type argument list on a component.</span>
+<span class="kd">const</span> <span class="nx">identity</span> <span class="o">=</span> <span class="p">&lt;</span><span class="nx">T</span><span class="p">,</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">value</span><span class="p">:</span> <span class="nx">T</span><span class="p">):</span> <span class="nx">T</span> <span class="o">=&gt;</span> <span class="nx">value</span><span class="p">;</span>
+
+<span class="k">export</span> <span class="kd">const</span> <span class="nx">Typed</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">&lt;</span><span class="nc">Box</span><span class="p">&lt;</span><span class="kr">string</span><span class="o">&gt;</span> <span class="nx">prop</span><span class="o">=</span><span class="dl">"</span><span class="s2">x</span><span class="dl">"</span> <span class="o">/&gt;</span><span class="p">;</span>
+
+<span class="k">export</span> <span class="kd">const</span> <span class="nx">Both</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">(</span>
+  <span class="p">&lt;</span><span class="nc">Wrapper</span><span class="p">&lt;</span><span class="kr">number</span><span class="p">,</span> <span class="kr">string</span><span class="o">&gt;</span> <span class="nx">id</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="p">&lt;</span><span class="nc">Inner</span><span class="p">&lt;</span><span class="nx">boolean</span><span class="o">&gt;</span> <span class="nx">flag</span> <span class="o">/&gt;</span>
+  <span class="p">&lt;</span><span class="err">/</span><span class="na">Wrapper</span><span class="p">&gt;</span>
+);

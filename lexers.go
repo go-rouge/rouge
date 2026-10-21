@@ -35,6 +35,14 @@ func init() {
 	registerLexer(fortranLexer)
 	registerLexer(hclLexer)
 	registerLexer(terraformLexer)
+	registerLexer(tomlLexer)
+	registerLexer(xmlLexer)
+	registerLexer(makeLexer)
+	registerLexer(typescriptLexer)
+	registerLexer(jsxLexer)
+	registerLexer(tsxLexer)
+	registerLexer(dockerLexer)
+	registerLexer(protobufLexer)
 
 	registerFormatter(HTMLFormatter{})
 	// HTMLInline needs a theme; the registered default uses Github, mirroring a
