@@ -59,10 +59,17 @@ inline := rouge.HTMLInlineFormatter{Theme: rouge.Github}.Format(toks) // inline 
 
 ## Lexers
 
-Each lexer is a near-mechanical transcription of the gem's `state … rule …`
-definition, validated by a **differential oracle** against the reference
-`rouge` 5.0.0 gem: every committed `testdata/*` corpus file is highlighted and
-compared **byte-for-byte** to the gem's HTML (the `*.html` goldens).
+**31 lexers.** Each one is a near-mechanical transcription of the gem's
+`state … rule …` definition, validated by a **differential oracle** against the
+reference `rouge` 5.0.0 gem: every committed `testdata/*` corpus file is
+highlighted and compared **byte-for-byte** to the gem's HTML (the `*.html`
+goldens). `tools/goldens` is the capture tool that produces them; its `verify`
+subcommand reproduces a golden that is already committed, which is the control
+on the capture itself.
+
+Where the gem expresses a lexer as a subclass, so does this port: one builder
+carries the shared states and the hooks a subclass uses, so a rule added to C
+is a rule C++ gets, and a rule added to JavaScript is a rule TSX gets.
 
 **Byte-faithful** (gem-identical HTML on the benign corpus):
 
@@ -89,6 +96,14 @@ compared **byte-for-byte** to the gem's HTML (the `*.html` goldens).
 | Fortran | `fortran` | Fortran 2008 free form: kind parameters, `B`/`O`/`Z` literals, `.EQ.`-style operator words, two-word keywords, `FORMAT` state |
 | HCL | `hcl` | Hashicorp Configuration Language (`*.hcl`, `*.nomad`) |
 | Terraform | `terraform`, `tf` | HCL plus `${…}` interpolation, regex literals, `var`/`local` declarations |
+| TOML | `toml` | tables and arrays of tables, dotted and quoted keys, dates and times, all four numeric bases with `_` separators, multiline basic and literal strings |
+| XML | `xml` | also **SVG**, PLIST, XSL/XSD/WSDL/RSS (`*.svg`, `*.plist`, `*.xsl`, …) — CDATA, processing instructions, entities, attribute states; content detector on the XML declaration and the doctype |
+| Make | `make`, `makefile`, `mf`, `gnumake`, `bsdmake` | recipes, macro expansion, the GNU function list, conditionals, `define`; recipe bodies delegated to a **continuing** Shell lexer |
+| TypeScript | `typescript`, `ts` | JavaScript plus the TypeScript word sets, `as`/`satisfies`, optional-property labels, `?.` and `??` |
+| JSX | `jsx`, `react` | JavaScript plus elements, attributes and `{…}` interpolation; the text between tags delegated to a **continuing** HTML lexer |
+| TSX | `tsx` | JSX plus TypeScript, and the `<T,>` / `<Type>` generic-argument rules |
+| Dockerfile | `docker`, `dockerfile`, `containerfile` | instruction keywords, `FROM … AS …`, `ONBUILD`; `RUN` bodies delegated to a **continuing** Shell lexer |
+| Protobuf | `protobuf`, `proto` | messages, enums, services, `oneof`, extensions, scalar types, all numeric forms |
 | PlainText | `plaintext`, `text` | fallback |
 
 **Documented simplifications** (honest deviations from the gem):
@@ -129,6 +144,22 @@ compared **byte-for-byte** to the gem's HTML (the `*.html` goldens).
   the same set for any identifier a program can carry; the Rust corpus includes
   non-ASCII identifiers so the substitution is checked against the gem rather
   than assumed.
+- **TypeScript** drops the three lookbehinds of the gem's `as` / `satisfies`
+  rule, for the same reason COBOL and Fortran drop theirs: in the gem they
+  **constrain nothing**. Measured against rouge 5.0.0 — fed `x.as y`, `1as b`,
+  `...as c` and `z as d`, the gem marks `as ` as `Keyword::Declaration` on
+  **all four** lines, including the one after a dot that the gem's own source
+  comment gives as the negative example. What actually keeps `.as(` out is the
+  rule's trailing `\s+`, not its lookbehind.
+- **Protobuf** keeps the gem's `[+-=]` as written. It is a character *range*
+  from `+` (U+002B) to `=` (U+003D) rather than the three characters it looks
+  like, so it also covers `,` `-` `.` `/` `0`-`9` `:` `;` `<`. Every one of
+  those that could reach it is claimed by an earlier rule, so the widening is
+  inert — but it is the gem's behaviour.
+- **Make** keeps the gem's unreachable function rule in `:shell`: the macro
+  rule listed above it matches `$(` first, so the function rule can never fire.
+  Like HCL's here-document, it is recorded rather than quietly "fixed", so that
+  a reordering upstream is a change this port can follow.
 - **PHP** does not model `funcnamehighlighting` (the gem's built-in-function
   table promoting known calls to `Name.Builtin`); calls render as `Name.Function`,
   exactly as the gem does with `funcnamehighlighting:false`, the configuration the
@@ -142,8 +173,23 @@ compared **byte-for-byte** to the gem's HTML (the `*.html` goldens).
 Lexing runs on the sibling [go-ruby-regexp](https://github.com/go-ruby-regexp/regexp)
 Onigmo engine via its `MatchAt(src, pos)` primitive, which anchors `\G` at the
 scan cursor while keeping the whole buffer visible — so a rule's `^` matches only
-at a true line start and lookbehind sees the real prefix, exactly the
-`StringScanner` semantics a `RegexLexer` needs. Building this port upstreamed a
+at a true line start and lookbehind sees the real prefix.
+
+That is **stricter than the gem**, and the difference is why several rules are
+transcribed without their assertions (see the COBOL/Fortran and TypeScript
+notes above). Rouge tests rules with `StringScanner#skip` at the scan pointer,
+where a lookbehind cannot read the bytes before that pointer: a negative
+lookbehind always succeeds and a positive one always fails. Each such rule is
+therefore written from what the gem **does**, measured, rather than from what
+its pattern reads like.
+
+A lexer may also **delegate** to another. Two shapes exist, both the gem's:
+`delegate` lexes a chunk with a fresh sub-lexer, while `subDelegate` is the
+gem's `delegate @sub` — it calls the sub-lexer's `continue_lex`, so its state
+stack survives between chunks and a quote opened in one chunk is still open in
+the next. Make, Dockerfile and JSX need the second kind.
+
+Building this port upstreamed a
 handful of Onigmo-faithfulness fixes to that engine (`\<punct>` and `\f \v \a \e`
 escapes, the `\p{Nl}`/`\p{No}`/`\p{Cf}` property subcategories, and `MatchAt`
 itself).
@@ -153,11 +199,27 @@ itself).
 Tests are **deterministic and Ruby-free**: the differential goldens were captured
 from the `rouge` gem once and committed, so `go test` reproduces gem-faithfulness
 without the gem on `PATH` (the gem is not stdlib, and the cross-arch / Windows CI
-lanes have no Ruby). Coverage is **100%** including error branches.
+lanes have no Ruby). Coverage is **100%** including error branches, with **zero**
+uncovered blocks rather than a rounded total.
 
 ```
 go test ./...
 ```
+
+A lexer is a parser fed untrusted input, so every lexer is **fuzzed**
+(`FuzzLexers`, seed corpus committed under `testdata/fuzz/`). The invariant it
+asserts is the one that holds whatever the input: lexing **accounts for every
+byte** — none dropped, which would delete source from a rendered page, and none
+invented, which would be an injection.
+
+```
+go test -fuzz FuzzLexers
+```
+
+Lexing is **linear in the input**, including against inputs built to defeat the
+lazy quantifiers the gem's rules use — unterminated comments, strings, tags,
+macros and template literals. Measured at 4k/8k/16k/32k bytes across the
+lexers, the worst doubling ratio is 2.36x; 4x would be quadratic.
 
 CI builds and tests on **3 OSes** (linux/macos/windows) and the **six 64-bit Go
 targets** (amd64/arm64/riscv64/loong64/ppc64le/s390x).
