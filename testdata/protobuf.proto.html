@@ -1,0 +1,75 @@
+<span class="c1">// A protocol buffer schema exercising the lexer's rules.</span>
+<span class="na">syntax</span> <span class="o">=</span> <span class="s">"proto3"</span><span class="p">;</span>
+
+<span class="kn">package</span> <span class="nn">tutorial</span><span class="o">.</span><span class="n">v1</span><span class="p">;</span>
+
+<span class="k">import</span> <span class="s">"google/protobuf/timestamp.proto"</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">"other.proto"</span><span class="p">;</span>
+
+<span class="k">option</span> <span class="na">java_package</span> <span class="o">=</span> <span class="s">'com.example.tutorial'</span><span class="p">;</span>
+<span class="k">option</span> <span class="na">optimize_for</span> <span class="o">=</span> <span class="n">SPEED</span><span class="p">;</span>
+
+<span class="cm">/* A multi-line comment
+   spanning two lines. */</span>
+
+<span class="kd">message</span> <span class="nc">Person</span> <span class="p">{</span>
+  <span class="k">required</span> <span class="kt">string</span> <span class="na">name</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="k">required</span> <span class="kt">int32</span> <span class="na">id</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="k">optional</span> <span class="kt">string</span> <span class="na">email</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+  <span class="k">repeated</span> <span class="n">PhoneNumber</span> <span class="na">phones</span> <span class="o">=</span> <span class="mi">4</span> <span class="p">[</span><span class="k">packed</span> <span class="o">=</span> <span class="kc">true</span><span class="p">];</span>
+
+  <span class="kd">enum</span> <span class="n">PhoneType</span> <span class="p">{</span>
+    <span class="na">MOBILE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">HOME</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">WORK</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">message</span> <span class="nc">PhoneNumber</span> <span class="p">{</span>
+    <span class="k">optional</span> <span class="kt">string</span> <span class="na">number</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">optional</span> <span class="n">PhoneType</span> <span class="na">type</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">HOME</span><span class="p">];</span>
+  <span class="p">}</span>
+
+  <span class="k">oneof</span> <span class="n">contact</span> <span class="p">{</span>
+    <span class="kt">string</span> <span class="na">nickname</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+    <span class="kt">uint64</span> <span class="na">handle</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">extensions</span> <span class="mi">100</span> <span class="k">to</span> <span class="k">max</span><span class="p">;</span>
+
+  <span class="kt">double</span> <span class="na">ratio</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+  <span class="kt">float</span> <span class="na">share</span> <span class="o">=</span> <span class="mi">21</span><span class="p">;</span>
+  <span class="kt">bool</span> <span class="na">active</span> <span class="o">=</span> <span class="mi">22</span><span class="p">;</span>
+  <span class="kt">bytes</span> <span class="na">blob</span> <span class="o">=</span> <span class="mi">23</span><span class="p">;</span>
+  <span class="kt">fixed32</span> <span class="na">a</span> <span class="o">=</span> <span class="mi">24</span><span class="p">;</span>
+  <span class="kt">fixed64</span> <span class="na">b</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span>
+  <span class="kt">sfixed32</span> <span class="na">c</span> <span class="o">=</span> <span class="mi">26</span><span class="p">;</span>
+  <span class="kt">sfixed64</span> <span class="na">d</span> <span class="o">=</span> <span class="mi">27</span><span class="p">;</span>
+  <span class="kt">sint32</span> <span class="na">e</span> <span class="o">=</span> <span class="mi">28</span><span class="p">;</span>
+  <span class="kt">sint64</span> <span class="na">f</span> <span class="o">=</span> <span class="mi">29</span><span class="p">;</span>
+  <span class="kt">uint32</span> <span class="na">g</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
+  <span class="kt">int64</span> <span class="na">h</span> <span class="o">=</span> <span class="mi">31</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">extend</span> <span class="nc">Person</span> <span class="p">{</span>
+  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">extra</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">group</span> <span class="n">Result</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">{</span>
+  <span class="k">optional</span> <span class="kt">string</span> <span class="na">url</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">service</span> <span class="n">AddressBook</span> <span class="p">{</span>
+  <span class="k">rpc</span> <span class="n">Lookup</span> <span class="p">(</span><span class="n">Person</span><span class="p">)</span> <span class="k">returns</span> <span class="p">(</span><span class="n">Person</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Numbers</span> <span class="p">{</span>
+  <span class="k">optional</span> <span class="kt">double</span> <span class="na">exp</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">1.5e10</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">double</span> <span class="na">neg</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">-inf</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">double</span> <span class="na">nan_value</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">nan</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">float</span> <span class="na">frac</span> <span class="o">=</span> <span class="mi">4</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">.25</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">float</span> <span class="na">whole</span> <span class="o">=</span> <span class="mi">5</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">3f</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">hex</span> <span class="o">=</span> <span class="mi">6</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mh">0x1FuL</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">oct</span> <span class="o">=</span> <span class="mi">7</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mo">0755L</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">dec</span> <span class="o">=</span> <span class="mi">8</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">42u</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">flag</span> <span class="o">=</span> <span class="mi">9</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
+<span class="p">}</span>

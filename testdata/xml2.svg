@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width=120>
+  <title>A small drawing</title>
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color='#ff0000'/>
+      <stop offset="100%" stop-color="#0000ff" />
+    </linearGradient>
+  </defs>
+  <rect x="10" y="10" width="100" height="100" fill="url(#g1)" rx="8"/>
+  <circle cx="60" cy="60" r="30" fill="none" stroke="#fff" stroke-width="2"/>
+  <path d="M 10 10 L 110 110 M 110 10 L 10 110" stroke="black"/>
+  <text x="60" y="115" text-anchor="middle">caf&#233;</text>
+  <!-- end -->
+</svg>

@@ -129,6 +129,43 @@ type lexState struct {
 	// same thing because every counter starts at zero and a lexState is fresh
 	// for each Lex.
 	macroDelims map[string]int
+	// sub is the CONTINUING delegate sub-lexer (the gem's `@shell` / `@html`
+	// instance variable, driven by `delegate @shell`). Rouge's delegate calls
+	// continue_lex, which does NOT reset the delegate, so its state stack
+	// survives from one delegated chunk to the next; see subDelegate. A
+	// lexState belongs to a single Lex of a single lexer, and no lexer in this
+	// port keeps more than one such delegate, so one field is enough.
+	sub *lexState
+}
+
+// subReset puts the continuing delegate for rl into its initial state, which is
+// the gem's `@sub.reset!` (and the `@sub = Sub.new(options)` a `start` block
+// does). The next subDelegate starts that lexer from :root.
+func (ls *lexState) subReset(rl *RegexLexer) {
+	sub := &lexState{rl: rl, stack: []*stateDef{rl.getState("root")}}
+	for _, name := range rl.startPush {
+		sub.stack = append(sub.stack, rl.getState(name))
+	}
+	ls.sub = sub
+}
+
+// subDelegate lexes text with the CONTINUING delegate for rl and splices its
+// tokens into this stream, mirroring Rouge's `delegate @sub`. Unlike delegate,
+// which lexes text with a fresh lexer, the delegate's state stack is carried
+// across calls: a quote opened in one chunk is still open in the next. The
+// chunk is scanned with scan rather than run, because the end of a chunk is not
+// the end of the delegate's input and its open states must not be drained.
+func (ls *lexState) subDelegate(rl *RegexLexer, text string) {
+	if ls.sub == nil || ls.sub.rl != rl {
+		ls.subReset(rl)
+	}
+	s := ls.sub
+	s.src, s.pos, s.out = text, 0, nil
+	s.scan()
+	for _, tv := range s.out {
+		ls.emit(tv.Token, tv.Value)
+	}
+	s.out = nil
 }
 
 // macroDelim returns the Rust macro-delimiter counters, creating them on first
@@ -210,6 +247,14 @@ func (rl *RegexLexer) getState(name string) *stateDef {
 // the current state's rules; on no match it emits one Error char and advances,
 // exactly like RegexLexer#stream_tokens.
 func (ls *lexState) run() {
+	ls.scan()
+	ls.drain()
+}
+
+// scan is the lex loop itself, stopping at the end of the current input without
+// touching the state stack. subDelegate uses it directly, because a delegated
+// chunk is not the end of the delegate's input.
+func (ls *lexState) scan() {
 	for ls.pos < len(ls.src) {
 		if !ls.step(ls.stack[len(ls.stack)-1]) {
 			// No rule matched: consume one byte as Error and continue.
@@ -217,6 +262,10 @@ func (ls *lexState) run() {
 			ls.pos++
 		}
 	}
+}
+
+// drain runs at the real end of input.
+func (ls *lexState) drain() {
 	// At end of input, drain any pushed states whose top rule is a zero-width
 	// cleanup (e.g. an empty-pattern pop): these terminate open constructs the way
 	// Rouge's stream finalization does. Bounded by the stack depth and the

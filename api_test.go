@@ -172,10 +172,19 @@ func TestGuessDetectBranches(t *testing.T) {
 	if Guess("<html><body></body></html>").Tag() != "html" {
 		t.Error("guess html via <html>")
 	}
-	// A bare XML declaration is explicitly not claimed by HTML's detector; with no
-	// other claimant it falls back to plaintext.
-	if Guess("<?xml version=\"1.0\"?>\n<root/>").Tag() != "plaintext" {
-		t.Error("xml decl should not be guessed as html")
+	// A bare XML declaration is explicitly not claimed by HTML's detector. The
+	// XML lexer claims it instead (its detect? returns true for /\A<\?xml\b/).
+	if got := Guess("<?xml version=\"1.0\"?>\n<root/>").Tag(); got != "xml" {
+		t.Errorf("xml decl guessed as %q, want xml", got)
+	}
+	// A non-HTML doctype with no <?xml?> prologue is XML too, by the third arm
+	// of the detector.
+	if got := Guess("<!DOCTYPE plist PUBLIC \"-//Apple//DTD\">\n<plist/>").Tag(); got != "xml" {
+		t.Errorf("plist doctype guessed as %q, want xml", got)
+	}
+	// An HTML doctype is explicitly refused by XML's detector, so HTML keeps it.
+	if got := Guess("<!DOCTYPE html>\n<p>hi</p>").Tag(); got != "html" {
+		t.Errorf("html doctype guessed as %q, want html", got)
 	}
 	if Guess("#compdef mytool\n").Tag() != "shell" {
 		t.Error("guess shell via #compdef")

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE catalog SYSTEM "catalog.dtd">
+<!-- A catalogue, with a comment that has -- a dash inside it -->
+<catalog xmlns:dc="http://purl.org/dc/elements/1.1/" count='2'>
+  <book id="bk101" available>
+    <dc:title lang = "en">XML Developer&apos;s Guide &amp; Companion</dc:title>
+    <author>Gambardella, Matthew</author>
+    <price currency="USD">44.95</price>
+    <description><![CDATA[An in-depth look at <creating> applications]]></description>
+    <reviewed/>
+  </book>
+  <book id="bk102">
+    <dc:title>Midnight Rain</dc:title>
+    <genre>Fantasy</genre>
+    <note>Text with &#233; an entity and a bare &lt; escape.</note>
+    <empty></empty>
+  </book>
+  <?php echo "processing instruction"; ?>
+</catalog>
