@@ -222,23 +222,37 @@ the ones nobody fuzzed. A list is a list, and a short one fuzzes happily.
 go test -fuzz FuzzLexers
 ```
 
-Lexing is **linear in the input for 28 of the 31 lexers**, including against
-inputs built to defeat the lazy quantifiers the gem's rules use — unterminated
-comments, strings, tags, macros and template literals. `TestLexingIsLinearInTheInput`
-measures it at 1k/2k/4k bytes; linear is 2x per doubling and 4x is quadratic.
+Lexing is **linear in the input**, including against inputs built to defeat the
+lazy quantifiers the gem's rules use — unterminated comments, strings, tags,
+macros and template literals. `TestLexingIsLinearInTheInput` measures all 31
+lexers at 1k/2k/4k bytes; linear is 2x per doubling and 4x is quadratic.
 
-⛔ **C, C++ and Java are quadratic** on an unterminated block comment — 32 KiB
-takes about 26 seconds ([#17](https://github.com/go-rouge/rouge/issues/17)).
-The C-family function-signature rule scans forward for a `{` or `;` that never
-arrives, and the lexer retries it at every scan position. The rule is the gem's,
-so this is inherited rather than introduced, but it is a denial of service on
-exactly the untrusted input this library is meant to highlight. The three are
-named in `quadraticLexers` in `safety_test.go` so the test covers them the day
-the rule is fixed.
+It was not always true. C, C++ and Java were **quadratic** on an unterminated
+block comment — 32 KiB took about 26 seconds
+([#17](https://github.com/go-rouge/rouge/issues/17)) — because the C-family
+function-signature rule scans forward for a `{` or `;` that never arrives, and
+the lexer retries it at every scan position: O(n) attempts of O(n) work.
 
-This section previously said the worst ratio was 2.36x, with nothing in the
-repository reproducing it. It was wrong, and writing the measurement is what
-showed that.
+The fix is a **necessary-condition prefilter**, `rule.needAny`. That rule cannot
+match unless a `{` or `;` lies at or after the scan position, so when none does
+the regex is never run. The position of the last such byte is found once per
+lex, making the check O(1). It can only skip attempts that would have FAILED,
+so the emitted tokens are unchanged by construction — which is what lets it
+exist in a library whose contract is byte-for-byte equivalence with the gem.
+The byte-for-byte golden suite passes unchanged.
+
+Measured after the fix, on the input that used to take 26 seconds:
+
+| bytes | C | C++ | Java |
+|---:|---:|---:|---:|
+| 4096 | 1.59 ms | 1.80 ms | 1.85 ms |
+| 32768 | 12.51 ms | 14.53 ms | 14.80 ms |
+
+12.5 ms where it was ~26 s, and 1.95–2.03x per doubling throughout.
+
+This section once said the worst ratio was 2.36x, with nothing in the
+repository reproducing it. It was wrong; writing the measurement is what showed
+that, and the defect it exposed is the one fixed above.
 
 CI builds and tests on **3 OSes** (linux/macos/windows) and the **six 64-bit Go
 targets** (amd64/arm64/riscv64/loong64/ppc64le/s390x).
