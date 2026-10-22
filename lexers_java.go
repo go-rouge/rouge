@@ -51,7 +51,12 @@ var javaLexer = func() *RegexLexer {
 		// the modifiers and the type in "public static int foo(" keep their own
 		// tokens instead of becoming one blob. recurse is this port's name for
 		// re-lexing from the lexer's own root.
-		cb(`(\s*(?:[a-zA-Z_][a-zA-Z0-9_.\[\]<>]*\s+)+?)([a-zA-Z_][a-zA-Z0-9_]*)(\s*)(\()`,
+		// needAny "(": the pattern's last group is (\(), so no match can exist
+		// unless an opening parenthesis lies at or after the scan position.
+		// Same defect as C's signature rule (#17): without this the lazy `+?`
+		// scans to end of input from EVERY position on an unterminated block
+		// comment, which is O(n^2).
+		cbNeedAny(`(`, `(\s*(?:[a-zA-Z_][a-zA-Z0-9_.\[\]<>]*\s+)+?)([a-zA-Z_][a-zA-Z0-9_]*)(\s*)(\()`,
 			func(l *lexState, m *onigmo.MatchData) {
 				l.recurse(m.Str(1))
 				l.emit(NameFunction, m.Str(2))
