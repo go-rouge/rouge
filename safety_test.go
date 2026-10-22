@@ -84,17 +84,47 @@ func adversarial(open, filler string, n int) string {
 	return b.String()
 }
 
-// timeLex returns the SMALLEST time taken to lex src over several attempts.
+// measurableReps returns how many times src must be lexed for the total to be
+// large enough that the clock's resolution does not dominate it.
+//
+// ⛔ This exists because of Windows. Its clock ticks coarsely — often around
+// half a millisecond, sometimes far worse — and a fixed repetition count that
+// is ample on Linux measures ZERO there, or quantises a small duration up to
+// one tick. That does not fail honestly: CI reported "1024 bytes measured as
+// zero time" for three lexers, and for two others it produced ratios of 3.37x
+// and 6.49x that looked exactly like the quadratic defect this test hunts.
+// Both were the instrument. The same lexers measure 1.96x and 1.97x where the
+// clock can see them.
+//
+// Widening the threshold would have "fixed" that by making the test unable to
+// fail. Calibrating the measurement fixes it by making the test able to
+// measure.
+func measurableReps(l Lexer, src string) int {
+	// 30ms is many ticks of even a bad clock, so quantisation is a per-cent
+	// effect rather than the whole reading.
+	const floor = 30 * time.Millisecond
+	reps := 1
+	for reps < 1<<20 {
+		start := time.Now()
+		for i := 0; i < reps; i++ {
+			l.Lex(src)
+		}
+		if time.Since(start) >= floor {
+			return reps
+		}
+		reps *= 2
+	}
+	return reps
+}
+
+// timeLex returns the SMALLEST per-lex time over several attempts.
 //
 // The minimum is the right statistic under contention: other load can only
 // make a run slower, never faster, so the smallest sample is the one least
 // polluted by it. A mean would track the machine's mood — and this test ran
 // first on a machine at load 43, where it would have measured nothing else.
-func timeLex(tb testing.TB, l Lexer, src string) time.Duration {
+func timeLex(tb testing.TB, l Lexer, src string, reps int) time.Duration {
 	tb.Helper()
-	// The same repetition count at every size, so it cancels in the ratio
-	// while lifting each measurement clear of the clock's resolution.
-	const reps = 5
 	best := time.Duration(1<<63 - 1)
 	for trial := 0; trial < 3; trial++ {
 		start := time.Now()
@@ -105,7 +135,7 @@ func timeLex(tb testing.TB, l Lexer, src string) time.Duration {
 			best = d
 		}
 	}
-	return best
+	return best / time.Duration(reps)
 }
 
 // quadraticLexers are the lexers known to be super-linear on an unterminated
@@ -190,14 +220,21 @@ func TestLexingIsLinearInTheInput(t *testing.T) {
 			if l == nil {
 				t.Fatalf("no lexer registers %q", c.tag)
 			}
+			// Calibrate once, at the smallest size, and reuse that count at
+			// every size: the repetition count then cancels exactly in the
+			// ratio, and the bigger inputs are comfortably above the floor
+			// because they take longer, not fewer, reps.
+			smallest := adversarial(c.open, c.filler, sizes[0])
+			reps := measurableReps(l, smallest)
 			times := make([]time.Duration, len(sizes))
 			for i, n := range sizes {
-				times[i] = timeLex(t, l, adversarial(c.open, c.filler, n))
+				times[i] = timeLex(t, l, adversarial(c.open, c.filler, n), reps)
 			}
+			t.Logf("%d reps per measurement (calibrated at %d bytes)", reps, sizes[0])
 			for i := 1; i < len(sizes); i++ {
 				if times[i-1] <= 0 {
-					t.Fatalf("%d bytes measured as zero time: the clock cannot see this, "+
-						"raise reps in timeLex", sizes[i-1])
+					t.Fatalf("%d bytes measured as zero time at %d reps: measurableReps "+
+						"did not lift it clear of this platform's clock", sizes[i-1], reps)
 				}
 				ratio := float64(times[i]) / float64(times[i-1])
 				if ratio >= superLinear {
