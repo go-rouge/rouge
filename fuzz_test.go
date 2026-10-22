@@ -11,11 +11,24 @@ import (
 	"testing"
 )
 
-// fuzzTags are the lexers FuzzLexers drives. A lexer is a parser fed untrusted
-// input -- a README, a pasted snippet, a file from a repository nobody here
-// controls -- so each one is fuzzed.
+// fuzzTags are the lexers FuzzLexers drives: one canonical tag per registered
+// lexer. A lexer is a parser fed untrusted input -- a README, a pasted
+// snippet, a file from a repository nobody here controls -- so each one is
+// fuzzed.
+//
+// ⛔ This list held only the eight lexers added in v0.7.0, while the README
+// said "every lexer is fuzzed". That was 8 of 31: the twenty-three older
+// lexers -- the ones that had been in front of untrusted input the longest --
+// were the ones nobody fuzzed. The claim was written when the list was new and
+// stopped being true the moment it stopped being the whole list.
+//
+// TestFuzzTagsCoverEveryLexer below is what keeps the sentence honest: adding
+// a lexer without adding it here now fails the suite.
 var fuzzTags = []string{
-	"toml", "xml", "make", "typescript", "jsx", "tsx", "docker", "protobuf",
+	"c", "cpp", "cobol", "css", "diff", "docker", "fortran", "go", "hcl",
+	"html", "java", "javascript", "json", "jsx", "make", "markdown", "php",
+	"plaintext", "protobuf", "python", "ruby", "rust", "shell", "sql",
+	"terraform", "latex", "toml", "tsx", "typescript", "xml", "yaml",
 }
 
 // fuzzSeedFiles are corpus files that make good starting points: each is real

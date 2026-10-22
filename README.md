@@ -212,14 +212,33 @@ asserts is the one that holds whatever the input: lexing **accounts for every
 byte** — none dropped, which would delete source from a rendered page, and none
 invented, which would be an injection.
 
+"Every" is enforced by `TestFuzzTagsCoverEveryLexer`, which reads the lexer
+registry and fails on one that is registered but not fuzzed. ⛔ Until it was
+written this sentence was false: the fuzz list held only the eight lexers added
+in v0.7.0, so the twenty-three that had faced untrusted input the longest were
+the ones nobody fuzzed. A list is a list, and a short one fuzzes happily.
+
 ```
 go test -fuzz FuzzLexers
 ```
 
-Lexing is **linear in the input**, including against inputs built to defeat the
-lazy quantifiers the gem's rules use — unterminated comments, strings, tags,
-macros and template literals. Measured at 4k/8k/16k/32k bytes across the
-lexers, the worst doubling ratio is 2.36x; 4x would be quadratic.
+Lexing is **linear in the input for 28 of the 31 lexers**, including against
+inputs built to defeat the lazy quantifiers the gem's rules use — unterminated
+comments, strings, tags, macros and template literals. `TestLexingIsLinearInTheInput`
+measures it at 1k/2k/4k bytes; linear is 2x per doubling and 4x is quadratic.
+
+⛔ **C, C++ and Java are quadratic** on an unterminated block comment — 32 KiB
+takes about 26 seconds ([#17](https://github.com/go-rouge/rouge/issues/17)).
+The C-family function-signature rule scans forward for a `{` or `;` that never
+arrives, and the lexer retries it at every scan position. The rule is the gem's,
+so this is inherited rather than introduced, but it is a denial of service on
+exactly the untrusted input this library is meant to highlight. The three are
+named in `quadraticLexers` in `safety_test.go` so the test covers them the day
+the rule is fixed.
+
+This section previously said the worst ratio was 2.36x, with nothing in the
+repository reproducing it. It was wrong, and writing the measurement is what
+showed that.
 
 CI builds and tests on **3 OSes** (linux/macos/windows) and the **six 64-bit Go
 targets** (amd64/arm64/riscv64/loong64/ppc64le/s390x).
