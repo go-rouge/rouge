@@ -179,7 +179,12 @@ func buildCFamily(o cFamilyOpts) *RegexLexer {
 		// RECURSES on three of the five groups, so the return type, the
 		// argument list and any comment before the brace keep their own tokens
 		// instead of becoming one blob.
-		cb(`(?m)([\w*\s]+?[\s*])(`+cID+`)(\s*\([^;]*?\))((?:`+cWS+`)?)(\{|;)`,
+		// needAny "{;": the pattern's last group is (\{|;), so no match can
+		// exist unless one of those two bytes lies at or after the scan
+		// position. Without that check this rule is where #17 lived: on an
+		// unterminated block comment it scans to end of input from EVERY
+		// position, which is O(n^2) — 32 KiB took about 26 seconds.
+		cbNeedAny(`{;`, `(?m)([\w*\s]+?[\s*])(`+cID+`)(\s*\([^;]*?\))((?:`+cWS+`)?)(\{|;)`,
 			func(l *lexState, m *onigmo.MatchData) {
 				l.recurse(m.Str(1))
 				l.emit(NameFunction, m.Str(2))

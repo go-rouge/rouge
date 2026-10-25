@@ -1,6 +1,8 @@
 package rouge
 
 import (
+	"strings"
+
 	onigmo "github.com/go-ruby-regexp/regexp"
 )
 
@@ -54,6 +56,20 @@ type rule struct {
 	re    *onigmo.Regexp
 	act   action
 	mixin string
+	// needAny, when non-empty, is a set of bytes of which at least ONE must
+	// appear at or after the scan position for this rule to have any chance of
+	// matching. step skips the regex entirely when none does.
+	//
+	// This is a NECESSARY CONDITION, never a sufficient one: it can only skip
+	// attempts that would have failed, so it cannot change what the lexer
+	// emits. That is the whole reason it is allowed to exist in a library
+	// whose contract is byte-for-byte equivalence with the rouge gem.
+	//
+	// It exists because of #17: the C-family function-signature rule scans
+	// forward for a `{` or `;`, which on an unterminated block comment never
+	// arrives. One attempt is O(n) and the lexer retries at every position, so
+	// lexing was O(n^2) — 32 KiB of `/*` took about 26 seconds.
+	needAny string
 }
 
 // stateDef is a named, ordered list of rules, mirroring Rouge's State.
@@ -108,6 +124,12 @@ type lexState struct {
 	// HCL lexers' heredoc states; empty when none is active. One field serves
 	// both because a lexState belongs to a single Lex of a single lexer.
 	heredocStr string
+	// lastAny caches, per needAny byte set, the LAST index in src at which one
+	// of those bytes occurs (-1 when none does). A rule carrying needAny can
+	// then be skipped in O(1) whenever the scan position is past that index,
+	// which is what turns #17's quadratic scan back into a linear one: the
+	// search itself happens once per lex, not once per position.
+	lastAny map[string]int
 	// strReg is the f-string / quoted-string register stack used by the Python
 	// lexer (each entry is a [type, delim] pair), mirroring its StringRegister.
 	strReg [][2]string
@@ -278,6 +300,21 @@ func (ls *lexState) drain() {
 	}
 }
 
+// lastIndexAny returns the last index in src holding one of the bytes in set,
+// or -1. The answer depends only on src, so it is computed once per lex and
+// reused at every scan position: that is what makes the needAny check O(1).
+func (ls *lexState) lastIndexAny(set string) int {
+	if i, ok := ls.lastAny[set]; ok {
+		return i
+	}
+	i := strings.LastIndexAny(ls.src, set)
+	if ls.lastAny == nil {
+		ls.lastAny = make(map[string]int, 1)
+	}
+	ls.lastAny[set] = i
+	return i
+}
+
 // step tries each rule of state in order at the current position. A mixin rule
 // recurses into the referenced state's rules. Returns true if a rule matched
 // (and its action ran). This mirrors RegexLexer#step, including the null-scan
@@ -289,6 +326,12 @@ func (ls *lexState) step(state *stateDef) bool {
 			if ls.step(ls.rl.getState(r.mixin)) {
 				return true
 			}
+			continue
+		}
+		// A necessary condition the regex would spend O(n) discovering. Skipping
+		// here can only skip a FAILING attempt, so the emitted tokens are
+		// unchanged; see rule.needAny and #17.
+		if r.needAny != "" && ls.lastIndexAny(r.needAny) < ls.pos {
 			continue
 		}
 		// MatchAt anchors \G at the cursor while keeping the whole buffer visible,
@@ -518,6 +561,18 @@ func (b *lexerBuilder) groupsRuleT(pat string, trans []transition, toks ...*Toke
 // rules the gem uses). The callback must advance ls.pos itself.
 func (b *lexerBuilder) cb(pat string, f func(l *lexState, m *onigmo.MatchData)) *lexerBuilder {
 	b.cur.rules = append(b.cur.rules, rule{re: compileRE(pat), act: action{callback: f}})
+	return b
+}
+
+// cbNeedAny is cb with a necessary-condition prefilter: at least one byte of
+// needAny must appear at or after the scan position, or the regex is not run.
+//
+// ⛔ needAny must be a condition the PATTERN ITSELF enforces — a byte every
+// possible match is required to contain. Naming a byte the pattern merely
+// usually contains would silently drop real matches, and the byte-for-byte
+// golden suite is what would catch that, after the fact.
+func (b *lexerBuilder) cbNeedAny(needAny, pat string, f func(l *lexState, m *onigmo.MatchData)) *lexerBuilder {
+	b.cur.rules = append(b.cur.rules, rule{re: compileRE(pat), act: action{callback: f}, needAny: needAny})
 	return b
 }
 

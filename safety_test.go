@@ -6,6 +6,7 @@ package rouge
 
 import (
 	"fmt"
+	"runtime"
 	"sort"
 	"strings"
 	"testing"
@@ -123,10 +124,19 @@ func measurableReps(l Lexer, src string) int {
 // make a run slower, never faster, so the smallest sample is the one least
 // polluted by it. A mean would track the machine's mood — and this test ran
 // first on a machine at load 43, where it would have measured nothing else.
+// ⛔ runtime.GC() before each trial, and more trials than feels necessary.
+// Lexing allocates heavily, so a collection landing inside a timed run
+// inflates it — and with only three trials the minimum can be inflated too.
+// Run as a package that is first green in isolation, the full suite then
+// reported javascript at 3.21x and latex at 3.90x, with their OTHER doubling
+// at 1.33x and 1.98x. Ratios that jump in both directions do not describe a
+// curve; they describe noise. Collecting first makes each trial start from a
+// comparable heap instead of inheriting whatever the previous test left.
 func timeLex(tb testing.TB, l Lexer, src string, reps int) time.Duration {
 	tb.Helper()
 	best := time.Duration(1<<63 - 1)
-	for trial := 0; trial < 3; trial++ {
+	for trial := 0; trial < 5; trial++ {
+		runtime.GC()
 		start := time.Now()
 		for i := 0; i < reps; i++ {
 			l.Lex(src)
@@ -138,32 +148,20 @@ func timeLex(tb testing.TB, l Lexer, src string, reps int) time.Duration {
 	return best / time.Duration(reps)
 }
 
-// quadraticLexers are the lexers known to be super-linear on an unterminated
-// block comment. See https://github.com/go-rouge/rouge/issues — the C-family
-// function-signature rule scans forward for a `{` or `;` from every scan
-// position, so O(n) attempts of O(n) work is O(n^2).
-//
-// ⛔ They are named here, not silently skipped. An exclusion list a reader can
-// see is a defect being tracked; an exclusion folded into the loop condition
-// is a defect being hidden. When the rule is fixed this list goes to nil and
-// the test immediately covers them.
-//
-// Measured 2026-10-22 at 1k/2k/4k: c 4.00x, java 3.97x, cpp 3.96x, against
-// <= 2.19x for the other 28 lexers.
-var quadraticLexers = map[string]string{
-	"c":    "function-signature rule scans to a `{`/`;` that never arrives",
-	"cpp":  "shares C's function-signature rule",
-	"java": "same rule shape as the C family",
-}
-
 // TestLexingIsLinearInTheInput measures what the README claims: that lexing is
 // linear in the input, including against inputs built to defeat the lazy
 // quantifiers the gem's rules use.
 //
 // That sentence was published with nothing in the repository reproducing it —
-// and when the measurement was finally written, it turned out to be false for
-// three of the thirty-one lexers. 28 are linear; C, C++ and Java are
-// quadratic, and a 32 KiB unterminated comment takes them about 26 seconds.
+// and when the measurement was finally written, it was false for three of the
+// thirty-one lexers: C, C++ and Java were quadratic, and 32 KiB of
+// unterminated block comment took them about 26 seconds (#17).
+//
+// ⛔ Those three were listed in a `quadraticLexers` exclusion map here, with
+// their reason, for exactly as long as the defect existed. The map is gone
+// because the defect is: the needAny prefilter in regex_lexer.go makes them
+// linear, so all twenty cases below run. An exclusion kept after its cause is
+// fixed is a hole nobody notices is open.
 //
 // What this guards against is catastrophic backtracking on untrusted input: a
 // highlighted README that hangs the process rendering it. That failure is not
@@ -213,9 +211,6 @@ func TestLexingIsLinearInTheInput(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.tag, func(t *testing.T) {
-			if why, known := quadraticLexers[c.tag]; known {
-				t.Skipf("known super-linear: %s", why)
-			}
 			l := FindLexer(c.tag)
 			if l == nil {
 				t.Fatalf("no lexer registers %q", c.tag)
@@ -245,6 +240,46 @@ func TestLexingIsLinearInTheInput(t *testing.T) {
 				}
 				t.Logf("%6d -> %6d bytes: %.2fx (%v -> %v)",
 					sizes[i-1], sizes[i], ratio, times[i-1], times[i])
+			}
+		})
+	}
+}
+
+// TestNeedAnyDoesNotExcludeATrailingMatch is the boundary case of the needAny
+// prefilter (#17): the required byte is the LAST byte of the input.
+//
+// The prefilter skips a rule when no byte of its set lies at or after the scan
+// position. An off-by-one there — comparing against the last index with `<=`
+// instead of `<`, or searching src[pos+1:] — would drop a function signature
+// that ends exactly at end of input, and the corpus goldens would not
+// necessarily contain one.
+func TestNeedAnyDoesNotExcludeATrailingMatch(t *testing.T) {
+	for _, c := range []struct{ tag, src string }{
+		// The `{` the C rule needs is the final byte.
+		{"c", "int main(void) {"},
+		{"cpp", "int main(void) {"},
+		// The `(` the Java rule needs is the final byte.
+		{"java", "public static void main("},
+	} {
+		t.Run(c.tag, func(t *testing.T) {
+			l := FindLexer(c.tag)
+			if l == nil {
+				t.Fatalf("no lexer registers %q", c.tag)
+			}
+			var got strings.Builder
+			sawFunc := false
+			for _, tok := range l.Lex(c.src) {
+				got.WriteString(tok.Value)
+				if tok.Token == NameFunction {
+					sawFunc = true
+				}
+			}
+			if got.String() != c.src {
+				t.Errorf("lexing %q returned %q", c.src, got.String())
+			}
+			if !sawFunc {
+				t.Errorf("%q produced no NameFunction: the needAny prefilter skipped "+
+					"the signature rule although the byte it needs is present", c.src)
 			}
 		})
 	}
