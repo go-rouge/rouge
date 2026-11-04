@@ -217,6 +217,7 @@ func allocBytes(f, setup func()) uint64 {
 			runtime.ReadMemStats(&after)
 			if d := after.TotalAlloc - before.TotalAlloc; d < best {
 				best = d
+			}
 		}
 		return best
 	}
