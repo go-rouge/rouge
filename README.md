@@ -242,6 +242,15 @@ the ones nobody fuzzed. A list is a list, and a short one fuzzes happily.
 go test -fuzz FuzzLexers
 ```
 
+Memory is **bounded per match**: every rule runs under a 16 MiB backtrack-stack
+limit (Onigmo's `onig_set_match_stack_limit_size`, via go-ruby-regexp's
+`WithStackLimit`). When a match hits it the rest of the input comes back as one
+`Text` token, not a panic and not an allocation that grows with the input. R's
+`'(\\.|.)*?'` holds 64 bytes per input byte, so an unterminated 1 MiB string is
+refused while a 256 KiB one is still lexed; every golden passes at 8 KiB.
+`TestStackLimitBomb` asserts the refusal, and CI runs it again alone under
+`GOMEMLIMIT` and `ulimit -v`.
+
 Lexing is **linear in the input**, including against inputs built to defeat the
 lazy quantifiers the gem's rules use — unterminated comments, strings, tags,
 macros and template literals. `TestLexingIsLinearInTheInput` measures the
