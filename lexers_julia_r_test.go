@@ -150,6 +150,60 @@ func TestLongRunsAreAccountedFor(t *testing.T) {
 	}
 }
 
+// TestJuliaPrefiltersDoNotChangeTokens is the proof that rule.pre only skips
+// attempts that would have failed: the Julia lexer with every prefilter removed
+// must emit exactly the same tokens, on the corpus and on every word of every
+// word set glued to the characters that decide a `\b`.
+func TestJuliaPrefiltersDoNotChangeTokens(t *testing.T) {
+	bare := &RegexLexer{tag: juliaLexer.tag, title: juliaLexer.title, states: map[string]*stateDef{}}
+	filtered := 0
+	for name, st := range juliaLexer.states {
+		cp := &stateDef{name: st.name, rules: append([]rule(nil), st.rules...)}
+		for i := range cp.rules {
+			if cp.rules[i].pre != nil {
+				filtered++
+				cp.rules[i].pre = nil
+			}
+		}
+		bare.states[name] = cp
+	}
+	if filtered < 10 {
+		t.Fatalf("only %d prefiltered rules found: the test is not looking at the lexer", filtered)
+	}
+
+	var inputs []string
+	for _, f := range []string{"julia.jl", "julia2.jl"} {
+		src, err := os.ReadFile(filepath.Join("testdata", f))
+		if err != nil {
+			t.Fatal(err)
+		}
+		inputs = append(inputs, string(src))
+	}
+	var words []string
+	for _, set := range juliaWordSets {
+		for w := range set {
+			words = append(words, w)
+		}
+	}
+	for _, w := range words {
+		for _, tail := range []string{"", " ", "x", "_", "1", "!", "(", "∈", "é", ".", "'", "\n", "\xff"} {
+			inputs = append(inputs, w+tail, "a "+w+tail, "1"+w+tail, "∈"+w+tail)
+		}
+	}
+	for _, in := range inputs {
+		want, got := bare.Lex(in), juliaLexer.Lex(in)
+		if len(want) != len(got) {
+			t.Fatalf("%q: %d tokens without prefilters, %d with", in, len(want), len(got))
+		}
+		for i := range want {
+			if want[i] != got[i] {
+				t.Fatalf("%q: token %d is %v %q with prefilters, %v %q without", in, i,
+					got[i].Token, got[i].Value, want[i].Token, want[i].Value)
+			}
+		}
+	}
+}
+
 // allocBytes is the smallest number of bytes f allocates over three runs, less
 // what the setup alone allocates (runtime.MemStats.TotalAlloc is cumulative, so
 // a collection cannot hide an allocation).
