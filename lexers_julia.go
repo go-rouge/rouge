@@ -246,11 +246,10 @@ var juliaLexer = func() *RegexLexer {
 
 	b.state("root").
 		rule(`\n`, Text).
-		// The gem writes `[^\S\n]+`. The engine evaluates a negated class that
-		// holds \S byte-wise, so it swallows every non-ASCII character (`2 * π`
-		// came out as Text " π "); `(?:(?!\n)\s)+` is the same set -- whitespace
-		// except newline -- spelled without the double negation.
-		rule(`(?:(?!\n)\s)+`, Text).
+		// The gem's own pattern. engine < v0.4.0 evaluated a negated class holding
+		// \S byte-wise and swallowed every non-ASCII character (`2 * π` came out as
+		// Text " π "), which an equivalent `(?:(?!\n)\s)+` worked around.
+		rule(`[^\S\n]+`, Text).
 		rule(`#=`, CommentMultiline, push("blockcomment")).
 		rule(`#.*$`, Comment).
 		rule(operators, Operator).when(startsWithAny(`+=-*/\&|$~^%!><.:?`)).

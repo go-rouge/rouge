@@ -1,10 +1,26 @@
 package rouge
 
 import (
+	"errors"
 	"strings"
 
 	onigmo "github.com/go-ruby-regexp/regexp"
 )
+
+// matchStackLimit is the backtrack-state budget, in bytes, of ONE rule match
+// (Onigmo's onig_set_match_stack_limit_size). A match that would need more is
+// abandoned with onigmo.ErrStackLimit and the lexer emits the rest of the input
+// as Text instead of growing without bound: R's `'(\\.|.)*?'` holds 64 bytes of
+// state per input byte (measured by bisecting the limit), and allocates ~510 MB
+// in total over an unterminated 1 MiB string.
+//
+// 16 MiB was chosen by measurement. Re-running the whole suite with the limit
+// forced down showed every golden passing at 8 KiB and failing at 4 KiB, so no
+// golden or test input comes within three orders of magnitude of it. What it
+// does cost is a ceiling on one literal: a string pays the same 64 bytes per
+// byte whether or not it is ever closed, so 16 MiB admits one of 256 KiB and
+// refuses a 1 MiB one. The state one match can hold is bounded by this constant.
+const matchStackLimit = 16 << 20
 
 // maxNullScans bounds successive zero-width matches before a state is forced to
 // fail, mirroring RegexLexer::MAX_NULL_SCANS.
@@ -127,6 +143,9 @@ type lexState struct {
 	stack []*stateDef
 	null  int
 	out   []TokenValue
+	// refused is set when a match hit matchStackLimit and the rest of the input
+	// was emitted as Text; see refuse.
+	refused bool
 	// heredocStr holds the active here-document terminator for the Shell and
 	// HCL lexers' heredoc states; empty when none is active. One field serves
 	// both because a lexState belongs to a single Lex of a single lexer.
@@ -312,6 +331,9 @@ func (ls *lexState) scan() {
 
 // drain runs at the real end of input.
 func (ls *lexState) drain() {
+	if ls.refused {
+		return // the input was cut short: its open constructs are not finished
+	}
 	// At end of input, drain any pushed states whose top rule is a zero-width
 	// cleanup (e.g. an empty-pattern pop): these terminate open constructs the way
 	// Rouge's stream finalization does. Bounded by the stack depth and the
@@ -322,6 +344,14 @@ func (ls *lexState) drain() {
 			break
 		}
 	}
+}
+
+// refuse gives up on the rest of the input after a match hit the stack limit:
+// everything from the cursor on is emitted as one Text token and the scan ends.
+func (ls *lexState) refuse() {
+	ls.emit(Text, ls.src[ls.pos:])
+	ls.pos = len(ls.src)
+	ls.refused = true
 }
 
 // lastIndexAny returns the last index in src holding one of the bytes in set,
@@ -364,7 +394,14 @@ func (ls *lexState) step(state *stateDef) bool {
 		// MatchAt anchors \G at the cursor while keeping the whole buffer visible,
 		// so ^/\A and lookbehind see the real prefix (StringScanner semantics). The
 		// returned offsets are absolute into ls.src.
-		m := r.re.MatchAt(ls.src, ls.pos)
+		m, err := r.re.MatchAtErr(ls.src, ls.pos)
+		if errors.Is(err, onigmo.ErrStackLimit) {
+			// The match was abandoned with the answer unknown: do not fold that into
+			// "no rule matched" (one Error byte, then the same blow-up again at the
+			// next byte). Refuse the rest of the input as Text.
+			ls.refuse()
+			return true
+		}
 		if m == nil {
 			continue
 		}
@@ -561,7 +598,7 @@ func compileRE(pat string) *onigmo.Regexp {
 	if err != nil {
 		panic("rouge: bad pattern " + pat + ": " + err.Error())
 	}
-	return re
+	return re.WithStackLimit(matchStackLimit)
 }
 
 // rule adds a single-token rule with optional state transitions. tok is the

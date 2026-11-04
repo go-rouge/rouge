@@ -415,12 +415,17 @@ func sigilString(l *lexState, m *onigmo.MatchData) bool {
 			continue
 		case interp && c == '#' && l.pos+1 < len(l.src) && l.src[l.pos+1] == '{':
 			// Interpolation: delegate the #{...} balanced span to the root lexer.
-			end := matchBalancedBrace(l.src, l.pos+1)
+			end, closed := matchBalancedBrace(l.src, l.pos+1)
 			l.emit(LiteralStringInterpol, l.src[l.pos:l.pos+2])
-			if end > l.pos+2 {
+			if closed {
 				l.recurse(l.src[l.pos+2 : end-1])
+				l.emit(LiteralStringInterpol, "}")
+			} else {
+				// No closing brace: the body runs to the end of the input, and the
+				// `}` is not there to emit. Emitting it anyway INVENTED a byte
+				// (found by FuzzLexers on `%!#{`), and slicing to end-1 dropped one.
+				l.recurse(l.src[l.pos+2 : end])
 			}
-			l.emit(LiteralStringInterpol, "}")
 			l.pos = end
 			continue
 		case open != close && c == open:
@@ -457,7 +462,7 @@ func sigilString(l *lexState, m *onigmo.MatchData) bool {
 // matchBalancedBrace returns the index just past the '}' that closes the '{' at
 // position open in s, accounting for nested braces. If unbalanced it returns
 // len(s).
-func matchBalancedBrace(s string, open int) int {
+func matchBalancedBrace(s string, open int) (end int, closed bool) {
 	depth := 0
 	for i := open; i < len(s); i++ {
 		switch s[i] {
@@ -466,9 +471,9 @@ func matchBalancedBrace(s string, open int) int {
 		case '}':
 			depth--
 			if depth == 0 {
-				return i + 1
+				return i + 1, true
 			}
 		}
 	}
-	return len(s)
+	return len(s), false
 }
