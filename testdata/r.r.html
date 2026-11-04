@@ -1,0 +1,182 @@
+<span class="c1">#!/usr/bin/env Rscript</span><span class="w">
+</span><span class="c1">### Example R script for syntax highlighting</span><span class="w">
+
+</span><span class="c1"># This is also a comment</span><span class="w">
+
+</span><span class="c1">## Valid names</span><span class="w">
+</span><span class="n">abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV0123456789._a</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">f2_bar</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">F2_BAR</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">.foo_</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">._foo</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">.</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">..</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">...</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">c</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="nf">c</span><span class="p">(</span><span class="nb">T</span><span class="p">,</span><span class="w"> </span><span class="nb">F</span><span class="p">)</span><span class="w">
+
+</span><span class="c1">## Invalid names</span><span class="w">
+</span><span class="m">0</span><span class="n">abc</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="m">.0</span><span class="n">abc</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">abc</span><span class="o">+</span><span class="n">cde</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="err">_</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="err">_</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+
+</span><span class="c1">## Reserved Words</span><span class="w">
+</span><span class="kc">NA</span><span class="w">
+</span><span class="kc">NA_integer_</span><span class="w">
+</span><span class="kc">NA_real_</span><span class="w">
+</span><span class="kc">NA_character_</span><span class="w">
+</span><span class="kc">NA_complex_</span><span class="w">
+</span><span class="kc">NULL</span><span class="w">
+</span><span class="kc">NaN</span><span class="w">
+</span><span class="kc">Inf</span><span class="w">
+</span><span class="c1">## Not reserved</span><span class="w">
+</span><span class="n">NULLa</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">NULL1</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">NULL.</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">NA_foo_</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+
+</span><span class="c1">## Numbers</span><span class="w">
+</span><span class="m">12345678901</span><span class="w">
+</span><span class="m">123456.78901</span><span class="w">
+</span><span class="m">123e3</span><span class="w">
+</span><span class="m">123E3</span><span class="w">
+</span><span class="m">1.23e-3</span><span class="w">
+</span><span class="m">1.23e3</span><span class="w">
+</span><span class="m">1.23e-3</span><span class="w">
+</span><span class="m">.25</span><span class="w">
+</span><span class="c1">## integer constants</span><span class="w">
+</span><span class="m">123L</span><span class="w">
+</span><span class="m">1.23L</span><span class="w">
+</span><span class="c1">## imaginary numbers</span><span class="w">
+</span><span class="m">123i</span><span class="w">
+</span><span class="m">-123i</span><span class="w">
+</span><span class="m">123e4i</span><span class="w">
+</span><span class="m">123e-4i</span><span class="w">
+</span><span class="c1">## Hex numbers</span><span class="w">
+</span><span class="mh">0xabcdefABCDEF01234</span><span class="w">
+</span><span class="mh">0xabcp123</span><span class="w">
+</span><span class="mh">0xabcP123</span><span class="w">
+</span><span class="c1">## Not hex</span><span class="w">
+</span><span class="m">0</span><span class="n">xg</span><span class="w">
+
+</span><span class="c1">## Special operators %xyz%</span><span class="w">
+</span><span class="c1">## %xyz%</span><span class="w">
+</span><span class="m">1</span><span class="w"> </span><span class="o">%%</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="n">diag</span><span class="p">(</span><span class="m">2</span><span class="p">)</span><span class="w"> </span><span class="o">%*%</span><span class="w"> </span><span class="n">diag</span><span class="p">(</span><span class="m">2</span><span class="p">)</span><span class="w">
+</span><span class="m">1</span><span class="w"> </span><span class="o">%/%</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="m">1</span><span class="w"> </span><span class="o">%in%</span><span class="w"> </span><span class="m">1</span><span class="o">:</span><span class="m">10</span><span class="w">
+</span><span class="n">diag</span><span class="p">(</span><span class="m">2</span><span class="p">)</span><span class="w"> </span><span class="o">%o%</span><span class="w"> </span><span class="n">diag</span><span class="p">(</span><span class="m">2</span><span class="p">)</span><span class="w">
+</span><span class="n">diag</span><span class="p">(</span><span class="m">2</span><span class="p">)</span><span class="w"> </span><span class="o">%x%</span><span class="w"> </span><span class="n">diag</span><span class="p">(</span><span class="m">2</span><span class="p">)</span><span class="w">
+</span><span class="n">`%foo bar%`</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">y</span><span class="w">
+</span><span class="m">1</span><span class="w"> </span><span class="o">%foo bar%</span><span class="w"> </span><span class="m">2</span><span class="w">
+
+</span><span class="c1">## Control Structures (3.2) and Function</span><span class="w">
+</span><span class="c1">## if, else</span><span class="w">
+</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="kc">TRUE</span><span class="p">)</span><span class="w"> </span><span class="n">print</span><span class="p">(</span><span class="s2">"foo"</span><span class="p">)</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="n">print</span><span class="p">(</span><span class="s2">"bar"</span><span class="p">)</span><span class="w">
+</span><span class="c1">## For, in</span><span class="w">
+</span><span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span><span class="o">:</span><span class="m">5</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="c1">## While, break</span><span class="w">
+</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">1</span><span class="w">
+</span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="kc">TRUE</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">1</span><span class="w">
+    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">3</span><span class="p">)</span><span class="w"> </span><span class="k">break</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="c1">## Repeat</span><span class="w">
+</span><span class="k">repeat</span><span class="w"> </span><span class="p">{</span><span class="m">1+1</span><span class="p">}</span><span class="w">
+</span><span class="c1">## Switch</span><span class="w">
+</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">3</span><span class="w">
+</span><span class="nf">switch</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="m">2+2</span><span class="p">,</span><span class="w"> </span><span class="n">mean</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="m">10</span><span class="p">),</span><span class="w"> </span><span class="n">rnorm</span><span class="p">(</span><span class="m">5</span><span class="p">))</span><span class="w">
+</span><span class="c1">## Function, dot-dot-dot, return</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">...</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nf">return</span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="n">...</span><span class="p">))</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="c1"># Not keywords</span><span class="w">
+</span><span class="n">functiona</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="n">function.</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="n">function1</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">2</span><span class="w">
+
+
+</span><span class="c1">## Grouping Tokens 10.3.7</span><span class="w">
+</span><span class="c1">## Parentheses</span><span class="w">
+</span><span class="m">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">3</span><span class="p">)</span><span class="w">
+</span><span class="c1">## brackets</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">1</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="c1">## Indexing 10.3.8</span><span class="w">
+</span><span class="c1">## []</span><span class="w">
+</span><span class="n">bar</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">1</span><span class="o">:</span><span class="m">10</span><span class="w">
+</span><span class="n">bar</span><span class="p">[</span><span class="m">3</span><span class="p">]</span><span class="w">
+</span><span class="c1">## [[]]</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="o">=</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="o">=</span><span class="m">3</span><span class="p">)</span><span class="w">
+</span><span class="n">foo</span><span class="p">[[</span><span class="s2">"a"</span><span class="p">]]</span><span class="w">
+</span><span class="c1">## $</span><span class="w">
+</span><span class="n">foo</span><span class="o">$</span><span class="n">a</span><span class="w">
+</span><span class="n">foo</span><span class="o">$</span><span class="s2">"a"</span><span class="w">
+
+</span><span class="c1">## Operators</span><span class="w">
+</span><span class="m">2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="m">2</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="o">!</span><span class="w"> </span><span class="kc">TRUE</span><span class="w">
+</span><span class="o">?</span><span class="s2">"help"</span><span class="w">
+</span><span class="m">1</span><span class="o">:</span><span class="m">2</span><span class="w">
+</span><span class="m">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="m">2</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="m">2</span><span class="o">^</span><span class="m">2</span><span class="w">
+</span><span class="m">2</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="m">2</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="m">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="m">2</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="m">2</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="m">2</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="kc">TRUE</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="kc">FALSE</span><span class="w">
+</span><span class="kc">TRUE</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="kc">FALSE</span><span class="w">
+</span><span class="kc">TRUE</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">FALSE</span><span class="w">
+</span><span class="kc">TRUE</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="kc">FALSE</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">foo</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">&lt;&lt;-</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">-&gt;&gt;</span><span class="w"> </span><span class="n">foo</span><span class="w">
+</span><span class="n">base</span><span class="o">:::</span><span class="n">sum</span><span class="w">
+</span><span class="n">base</span><span class="o">::</span><span class="n">sum</span><span class="w">
+
+</span><span class="c1">## Strings</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="s2">"hello, world!"</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="s1">'hello, world!'</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="s2">"Hello, 'world!"</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="s1">'Hello, "world!'</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="s1">'Hello, \'world!\''</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="s2">"Hello, \"world!\""</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="s2">"Hello,
+world!"</span><span class="w">
+</span><span class="n">foo</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="s1">'Hello,
+world!'</span><span class="w">
+
+</span><span class="c1">## Backtick strings</span><span class="w">
+</span><span class="n">`foo123 +!"bar'baz`</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">` `</span><span class="w"> </span><span class="o">% %</span><span class="w"> </span><span class="m">2</span><span class="w">
+
+</span><span class="c1">## Builtin names</span><span class="w">
+
+</span><span class="nb">LETTERS</span><span class="w">
+</span><span class="nb">letters</span><span class="w">
+</span><span class="nb">month.abb</span><span class="w">
+</span><span class="nb">month.name</span><span class="w">
+</span><span class="nb">pi</span><span class="w">
+
+</span><span class="c1">## Roxygen</span><span class="w">
+
+</span><span class="cd">#' A description</span><span class="w">
+</span><span class="cd">#'</span><span class="w">
+</span><span class="cd">#' Long description</span><span class="w">
+</span><span class="cd">#' @param x the object</span><span class="w">
+</span><span class="cd">#' @return A logical indicating whether \code{x == 0}</span><span class="w">
+</span><span class="n">is_zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">0</span><span class="w">
+</span>

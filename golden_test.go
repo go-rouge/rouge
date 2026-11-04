@@ -88,6 +88,12 @@ var goldenCases = []struct {
 	{"tsx2.tsx", "tsx"},
 	{"docker.docker", "docker"},
 	{"protobuf.proto", "protobuf"},
+	// julia.jl and r.r are Rouge's own spec/visual samples (rouge v5.1.0);
+	// julia2.jl and r2.r are edge cases written for this port.
+	{"julia.jl", "julia"},
+	{"julia2.jl", "julia"},
+	{"r.r", "r"},
+	{"r2.r", "r"},
 }
 
 // TestGolden highlights each corpus file and compares the HTML to the gem-
