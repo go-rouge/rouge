@@ -425,12 +425,12 @@ func sigilString(l *lexState, m *onigmo.MatchData) bool {
 			continue
 		case open != close && c == open:
 			depth++
-			l.emit(tok, string(c))
+			l.emit(tok, l.src[l.pos:l.pos+1])
 			l.pos++
 			continue
 		case c == close:
 			depth--
-			l.emit(tok, string(c))
+			l.emit(tok, l.src[l.pos:l.pos+1])
 			l.pos++
 			if depth == 0 {
 				if typ == "r" {
@@ -440,7 +440,11 @@ func sigilString(l *lexState, m *onigmo.MatchData) bool {
 			}
 			continue
 		default:
-			l.emit(tok, string(c))
+			// The byte itself, not string(c): converting a byte to a string
+			// treats it as a code point, so each byte of a multi-byte character
+			// came out re-encoded ("é" -> "Ã©"). Adjacent tokens of one type are
+			// coalesced, so the character is whole again in the stream.
+			l.emit(tok, l.src[l.pos:l.pos+1])
 			l.pos++
 		}
 	}

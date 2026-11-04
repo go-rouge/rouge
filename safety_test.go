@@ -196,6 +196,17 @@ func TestLexingIsLinearInTheInput(t *testing.T) {
 		{"shell", "$(", "aaaa "},              // unterminated substitution
 		{"hcl", "<<EOF", "aaaa "},             // here-document with no terminator
 		{"latex", "\\begin{verbatim}", "aa "}, // unterminated environment
+		{"julia", "#=", "aaaa "},              // unterminated (nested) block comment
+		{"julia", "#= #=", "aaaa "},           //
+		{"julia", "\"", "aaaa "},              // unterminated string
+		{"julia", "\"", "\\\\ \\\" "},         // ... made of escapes
+		{"julia", "`", "aaaa "},               // unterminated backtick command
+		{"julia", "'", "aaaa "},               // unterminated character literal
+		{"r", "'", "aaaa "},                   // unterminated single-quoted string
+		{"r", "\"", "aaaa\n"},                 // unterminated double-quoted string over many lines
+		{"r", "'", "\\\\\\\\"},                // ... made of backslash pairs: (\\.|.)*? can split each two ways
+		{"r", "`", "aaaa "},                   // unterminated backtick name
+		{"r", "%", "aaaa "},                   // unterminated %op%
 	}
 
 	// 2.8 sits clear of linear (2.0, with noise) and well under quadratic

@@ -245,12 +245,29 @@ func coalesce(in []TokenValue) []TokenValue {
 		return in
 	}
 	out := make([]TokenValue, 0, len(in))
-	for _, tv := range in {
-		if n := len(out); n > 0 && out[n-1].Token == tv.Token {
-			out[n-1].Value += tv.Value
-			continue
+	// Each run of equal tokens is joined in ONE pass. Appending to the previous
+	// value with += copies it every time, which is quadratic in the length of
+	// the run: a rule that matches one character at a time (Julia's block
+	// comment, R's and Julia's string bodies) turned a 128 KiB comment into
+	// 2 GB of allocation and 440 ms.
+	for i := 0; i < len(in); {
+		j := i + 1
+		size := len(in[i].Value)
+		for j < len(in) && in[j].Token == in[i].Token {
+			size += len(in[j].Value)
+			j++
 		}
-		out = append(out, tv)
+		if j == i+1 {
+			out = append(out, in[i])
+		} else {
+			var b strings.Builder
+			b.Grow(size)
+			for _, tv := range in[i:j] {
+				b.WriteString(tv.Value)
+			}
+			out = append(out, TokenValue{Token: in[i].Token, Value: b.String()})
+		}
+		i = j
 	}
 	return out
 }

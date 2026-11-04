@@ -59,9 +59,10 @@ inline := rouge.HTMLInlineFormatter{Theme: rouge.Github}.Format(toks) // inline 
 
 ## Lexers
 
-**31 lexers.** Each one is a near-mechanical transcription of the gem's
+**33 lexers.** Each one is a near-mechanical transcription of the gem's
 `state … rule …` definition, validated by a **differential oracle** against the
-reference `rouge` 5.0.0 gem: every committed `testdata/*` corpus file is
+reference `rouge` gem (5.0.0; the Julia and R goldens were captured from 5.1.0,
+and `tools/goldens verify` reproduced the Python and Ruby goldens under it first): every committed `testdata/*` corpus file is
 highlighted and compared **byte-for-byte** to the gem's HTML (the `*.html`
 goldens). `tools/goldens` is the capture tool that produces them; its `verify`
 subcommand reproduces a golden that is already committed, which is the control
@@ -104,6 +105,8 @@ is a rule C++ gets, and a rule added to JavaScript is a rule TSX gets.
 | TSX | `tsx` | JSX plus TypeScript, and the `<T,>` / `<Type>` generic-argument rules |
 | Dockerfile | `docker`, `dockerfile`, `containerfile` | instruction keywords, `FROM … AS …`, `ONBUILD`; `RUN` bodies delegated to a **continuing** Shell lexer |
 | Protobuf | `protobuf`, `proto` | messages, enums, services, `oneof`, extensions, scalar types, all numeric forms |
+| Julia | `julia`, `jl` | `*.jl`; `#= … =#` nesting block comments, `function`/`macro` and `struct`/`abstract type` name states, the generated type list, `I"…"`/`L"…"`/`E"…"` strings with `$` formats, all numeric bases with `_` separators, Unicode identifiers and operators; `julia` shebang detector |
+| R | `r`, `R`, `s`, `S` | `*.R`, `*.r`, `.Rhistory`, `.Rprofile`; `#'` doc comments, `%op%`, hex/float/`L`/`i` numbers, primitive functions recognised only before `(`, keyword/constant/builtin classification; `Rscript` shebang detector |
 | PlainText | `plaintext`, `text` | fallback |
 
 **Documented simplifications** (honest deviations from the gem):
@@ -160,6 +163,23 @@ is a rule C++ gets, and a rule added to JavaScript is a rule TSX gets.
   rule listed above it matches `$(` first, so the function rule can never fire.
   Like HCL's here-document, it is recorded rather than quietly "fixed", so that
   a reordering upstream is a change this port can follow.
+- **Julia** (julia.rb, rouge v5.1.0) drops the trailing-transpose rule
+  `(?<=[.\w)\]])'+` and the leading `\b` of its three word sets, for the reason
+  given for TypeScript above: under `StringScanner#skip` the positive lookbehind
+  can never hold, and `\b` at the scan pointer is true before any word character
+  (every alternative starts with one). Measured: `A'` is a name and an `Error`
+  in the gem, and `2if x` marks `if` as a keyword. julia.rb's `NAME_RE` uses
+  `\p{Po}`, which the engine does not have; it is spelled out from Go's
+  `unicode.Po` table (`\p{P}` would also admit dashes and brackets). Its
+  `[^\S\n]+` is written `(?:(?!\n)\s)+`: the engine evaluates a negated class
+  holding `\S` byte-wise, so it swallowed every non-ASCII character after a
+  space (`2 * π`). Its `mutable struct` keyword alternative can never match,
+  because the word set is an `/x` regexp and the space is ignored; that is kept.
+- **R** (r.rb, rouge v5.1.0) writes the primitive-function rule without its
+  leading `\b` and `(?<!.)`, again because both are evaluated at the scan
+  pointer in the gem: `x+1abs(2)` gives `abs` as `Name::Function`. The
+  mimetypes of both lexers are not carried (this library's lexer metadata has no
+  such field).
 - **PHP** does not model `funcnamehighlighting` (the gem's built-in-function
   table promoting known calls to `Name.Builtin`); calls render as `Name.Function`,
   exactly as the gem does with `funcnamehighlighting:false`, the configuration the
@@ -224,8 +244,12 @@ go test -fuzz FuzzLexers
 
 Lexing is **linear in the input**, including against inputs built to defeat the
 lazy quantifiers the gem's rules use — unterminated comments, strings, tags,
-macros and template literals. `TestLexingIsLinearInTheInput` measures all 31
-lexers at 1k/2k/4k bytes; linear is 2x per doubling and 4x is quadratic.
+macros and template literals. `TestLexingIsLinearInTheInput` measures the
+adversarial shapes at 1k/2k/4k bytes; linear is 2x per doubling and 4x is
+quadratic. `TestLongRunOfOneTokenIsLexedInLinearTime` adds the long-run case at
+64 KiB and 256 KiB: joining a run of equal tokens by `+=` was quadratic, and a
+1 MiB unterminated Julia block comment (one token per character) took about 28
+seconds until the run was joined in one pass.
 
 It was not always true. C, C++ and Java were **quadratic** on an unterminated
 block comment — 32 KiB took about 26 seconds

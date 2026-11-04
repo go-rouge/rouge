@@ -1,0 +1,43 @@
+<span class="c">#!/usr/bin/env julia</span>
+<span class="c"># Edge cases the visual sample does not reach.</span>
+<span class="n">A</span> <span class="o">=</span> <span class="x">[</span><span class="mi">1</span> <span class="mi">2</span><span class="x">;</span> <span class="mi">3</span> <span class="mi">4</span><span class="x">]</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">A</span><span class="err">'</span>            <span class="c"># trailing transpose: the gem's lookbehind never fires</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">A</span><span class="err">''</span> <span class="o">+</span> <span class="n">x</span><span class="o">.</span><span class="err">'</span><span class="n">y</span>
+<span class="mi">2</span><span class="k">if</span> <span class="n">x</span> <span class="k">end</span>
+<span class="mi">3</span><span class="k">in</span> <span class="n">y</span>
+<span class="k">mutable struct</span><span class="nc"> Point</span><span class="x">{</span><span class="n">T</span><span class="o">&lt;:</span><span class="kt">Real</span><span class="x">}</span>
+    <span class="n">x</span><span class="o">::</span><span class="n">T</span>
+<span class="k">end</span>
+<span class="k">primitive type</span><span class="nc"> Octet</span> <span class="mi">8</span> <span class="k">end</span>
+<span class="k">abstract type</span><span class="nc"> Shape</span> <span class="k">end</span>
+<span class="k">struct</span><span class="nc"> </span><span class="err">(</span><span class="nc">Pair</span><span class="x">)</span>
+<span class="k">end</span>
+<span class="k">function</span><span class="nf"> </span><span class="o">(+)</span><span class="x">(</span><span class="n">a</span><span class="x">,</span> <span class="n">b</span><span class="x">)</span> <span class="n">a</span> <span class="k">end</span>
+<span class="k">function</span><span class="nf"> ∘</span><span class="x">(</span><span class="n">f</span><span class="x">,</span> <span class="n">g</span><span class="x">)</span> <span class="n">f</span> <span class="k">end</span>
+<span class="k">macro</span><span class="nf"> m</span><span class="x">(</span><span class="n">x</span><span class="x">)</span> <span class="n">x</span> <span class="k">end</span>
+<span class="kd">local</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="x">;</span> <span class="kd">global</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">2</span><span class="x">;</span> <span class="kd">const</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="k">for</span> <span class="n">outer</span> <span class="n">i</span> <span class="k">in</span> <span class="mi">1</span><span class="o">:</span><span class="mi">3</span> <span class="k">end</span>
+<span class="nd">@time</span> <span class="nd">@inbounds</span> <span class="n">x</span><span class="x">[</span><span class="mi">1</span><span class="x">]</span>
+<span class="sb">`ls -l`</span>
+<span class="sc">'a'</span> <span class="sc">'\n'</span> <span class="sc">'\x41'</span> <span class="sc">'é'</span> <span class="err">'</span><span class="o">\</span><span class="n">U0001F600</span><span class="sc">' '</span><span class="o">\</span><span class="mi">101</span><span class="sc">' '</span><span class="n">ab</span><span class="err">'</span>
+<span class="s">"plain </span><span class="se">\"</span><span class="s">quoted</span><span class="se">\"</span><span class="s"> </span><span class="se">\\</span><span class="s"> \</span><span class="si">$ </span><span class="s">é </span><span class="se">\x41</span><span class="s"> </span><span class="se">\101</span><span class="s"> </span><span class="se">\N{DIGIT ONE}</span><span class="s"> </span><span class="se">\
+</span><span class="s">continued"</span>
+<span class="s">I"raw</span><span class="se">\n</span><span class="s">"</span> <span class="s">L"wide"</span> <span class="s">E"esc"</span>
+<span class="s">"printf %d %5.2f %-3s %(name)s </span><span class="si">$</span><span class="s">x </span><span class="si">$(y) $</span><span class="s">"</span>
+<span class="cm">#= block #= nested =# still =#</span> <span class="n">after</span>
+<span class="cm">#= unterminated block
+π ℯ im Inf32 NaN16 LOAD_PATH DEPOT_PATH
+x ≠ y ≤ z ≥ w ÷ 2 ÷= 3 .* .^ .\ ./ &lt;: &gt;: === !== =&gt; -&gt; :: ?
+αβγ = 1_000.5e3 + 0b1_01 + 0o7_7 + 0xdead_beef + 1_0 + .5 + 5. + 1e5 + 1f3 + 1_0e2
+Ωmega!!! = Vector{Int64}(undef, 3)
+\
+x \
+y
+[a, b]{c}(d);
+x = π + y ∈ z 语言 ∘ w
+function f′(x) x end
+function a·b(x) x end
+struct S′ end
+function (-)(x) x end
+function [](x) x end
+</span>

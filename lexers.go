@@ -43,6 +43,8 @@ func init() {
 	registerLexer(tsxLexer)
 	registerLexer(dockerLexer)
 	registerLexer(protobufLexer)
+	registerLexer(juliaLexer)
+	registerLexer(rLexer)
 
 	registerFormatter(HTMLFormatter{})
 	// HTMLInline needs a theme; the registered default uses Github, mirroring a

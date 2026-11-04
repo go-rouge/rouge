@@ -29,6 +29,7 @@ var fuzzTags = []string{
 	"html", "java", "javascript", "json", "jsx", "make", "markdown", "php",
 	"plaintext", "protobuf", "python", "ruby", "rust", "shell", "sql",
 	"terraform", "latex", "toml", "tsx", "typescript", "xml", "yaml",
+	"julia", "r",
 }
 
 // fuzzSeedFiles are corpus files that make good starting points: each is real
@@ -36,7 +37,7 @@ var fuzzTags = []string{
 var fuzzSeedFiles = []string{
 	"toml.toml", "xml.xml", "xml2.svg", "make.mk", "typescript.ts",
 	"typescript2.ts", "jsx.jsx", "jsx2.jsx", "tsx.tsx", "tsx2.tsx",
-	"docker.docker", "protobuf.proto",
+	"docker.docker", "protobuf.proto", "julia.jl", "julia2.jl", "r.r", "r2.r",
 }
 
 // FuzzLexers asserts the one invariant that holds for every lexer here,
@@ -67,6 +68,7 @@ func FuzzLexers(f *testing.F) {
 		"a = [[[[", "[[t]]", "a=\"\"\"", "x:\n\t$(shell (((",
 		"<x " + strings.Repeat("a", 64) + "=", "/*", "//\\\n", "'''a",
 		"<T,>", "<a<b<c<d<e", "{foo {bar", "as ", "satisfies\t",
+		"#=", "#= #= =#", "I\"", "`x", "'\\", "%", "x'", "function ", "#!/usr/bin/env julia",
 	} {
 		for i := range fuzzTags {
 			f.Add(uint8(i), s)
