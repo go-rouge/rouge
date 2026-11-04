@@ -10,7 +10,6 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-	"time"
 )
 
 // TestJuliaAndRRegistration pins the names Rouge declares in julia.rb and r.rb
@@ -107,15 +106,16 @@ func TestJuliaAndRAccountForEveryByte(t *testing.T) {
 // seconds that way; it takes a fraction of a second now, so the bound below is
 // loose enough for a loaded machine and far below the quadratic cost.
 //
-// The 1x/4x pair is the control: a bound that every input met would prove
-// nothing, so the time for 4x the input is also required to stay under 10x the
-// time for 1x (linear is 4x and quadratic 16x; a loaded machine moved a 20 ms
-// reading to 8.9x once, so the line sits between them rather than at either,
-// and the inputs are large enough that a reading is tens of milliseconds).
+// ⛔ The verdict is BYTES ALLOCATED, not wall-clock time. This test judged time
+// (4x the input must take under 10x the time) and failed on main under qemu
+// ppc64le with 28.7x (43 ms -> 1.24 s) on an input that measures a steady
+// 130-180 ns/byte on amd64 at every size: an emulator's scheduling and GC
+// pauses, not the algorithm. The cost the old coalesce had is a copy of the
+// whole run for every token appended, so TotalAlloc grows with the SQUARE of the
+// input (16x for 4x the input) while a linear lexer's grows 4x; allocation is
+// counted exactly whatever else the machine is doing. The smaller of three
+// runs is taken so a stray allocation by another goroutine cannot move it.
 func TestLongRunOfOneTokenIsLexedInLinearTime(t *testing.T) {
-	if testing.Short() {
-		t.Skip("timing measurement; skipped under -short")
-	}
 	for _, c := range []struct{ tag, open, filler string }{
 		{"julia", "#=", "aaaa "},   // block comment: [^=#] one character at a time
 		{"julia", "\"", "aaaa "},   // string body: ["\\] and $ one at a time
@@ -126,28 +126,29 @@ func TestLongRunOfOneTokenIsLexedInLinearTime(t *testing.T) {
 		l := FindLexer(c.tag)
 		t0 := adversarial(c.open, c.filler, 64<<10)
 		t1 := adversarial(c.open, c.filler, 256<<10)
-		d0, d1 := lexTime(l, t0), lexTime(l, t1)
-		// Under -race this is ~20x slower than the 1.2 us/byte of the slowest
-		// case, so the absolute bound is generous; the ratio is what decides.
-		if d1 > 60*time.Second {
-			t.Errorf("%s %q: %d bytes took %v", c.tag, c.open, len(t1), d1)
-		}
-		if d0 > 0 && d1 > 10*d0 {
-			t.Errorf("%s %q: 4x the input took %.1fx the time (%v -> %v); linear is 4x, quadratic 16x",
-				c.tag, c.open, float64(d1)/float64(d0), d0, d1)
+		b0, b1 := lexBytes(l, t0), lexBytes(l, t1)
+		ratio := float64(b1) / float64(b0)
+		t.Logf("%s %q: %d -> %d bytes allocated for 64 KiB -> 256 KiB: %.2fx", c.tag, c.open, b0, b1, ratio)
+		// Linear is 4x; the old coalesce measured ~13x here. 8 sits between.
+		if ratio > 8 {
+			t.Errorf("%s %q: 4x the input allocated %.1fx the bytes (%d -> %d); linear is 4x, quadratic 16x",
+				c.tag, c.open, ratio, b0, b1)
 		}
 		reconstruct(t, l, t0)
 	}
 }
 
-// lexTime is the smaller of two timed lexes of src, each after a collection.
-func lexTime(l Lexer, src string) time.Duration {
-	best := time.Duration(1<<63 - 1)
-	for i := 0; i < 2; i++ {
-		runtime.GC()
-		start := time.Now()
+// lexBytes is the smallest number of bytes one Lex of src allocates over three
+// runs (runtime.MemStats.TotalAlloc is cumulative, so a collection cannot hide
+// an allocation).
+func lexBytes(l Lexer, src string) uint64 {
+	best := ^uint64(0)
+	for i := 0; i < 3; i++ {
+		var before, after runtime.MemStats
+		runtime.ReadMemStats(&before)
 		l.Lex(src)
-		if d := time.Since(start); d < best {
+		runtime.ReadMemStats(&after)
+		if d := after.TotalAlloc - before.TotalAlloc; d < best {
 			best = d
 		}
 	}
