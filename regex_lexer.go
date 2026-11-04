@@ -70,6 +70,13 @@ type rule struct {
 	// arrives. One attempt is O(n) and the lexer retries at every position, so
 	// lexing was O(n^2) — 32 KiB of `/*` took about 26 seconds.
 	needAny string
+	// pre, when non-nil, is a cheap NECESSARY condition on the scan position: when
+	// it returns false the rule cannot match there, and step skips the regex. Like
+	// needAny it can only skip attempts that would have failed, never change what
+	// is emitted; it exists because a backtracking match of a 250-way alternation
+	// costs far more than the test that proves it cannot succeed (Julia's type
+	// list was tried at every token).
+	pre func(src string, pos int) bool
 }
 
 // stateDef is a named, ordered list of rules, mirroring Rouge's State.
@@ -351,6 +358,9 @@ func (ls *lexState) step(state *stateDef) bool {
 		if r.needAny != "" && ls.lastIndexAny(r.needAny) < ls.pos {
 			continue
 		}
+		if r.pre != nil && !r.pre(ls.src, ls.pos) {
+			continue
+		}
 		// MatchAt anchors \G at the cursor while keeping the whole buffer visible,
 		// so ^/\A and lookbehind see the real prefix (StringScanner semantics). The
 		// returned offsets are absolute into ls.src.
@@ -600,6 +610,46 @@ func (b *lexerBuilder) cbNeedAny(needAny, pat string, f func(l *lexState, m *oni
 func (b *lexerBuilder) cbFall(pat string, f func(l *lexState, m *onigmo.MatchData) bool) *lexerBuilder {
 	b.cur.rules = append(b.cur.rules, rule{re: compileRE(pat), act: action{fall: f}})
 	return b
+}
+
+// when attaches a necessary-condition prefilter to the rule just added (see
+// rule.pre). The condition must hold at EVERY position where the pattern can
+// match; it may hold where the pattern does not.
+func (b *lexerBuilder) when(f func(src string, pos int) bool) *lexerBuilder {
+	b.cur.rules[len(b.cur.rules)-1].pre = f
+	return b
+}
+
+// startsWithAny is a prefilter: the byte at pos is one of set, or is not ASCII
+// (a non-ASCII start is left to the pattern, which knows the Unicode rules).
+func startsWithAny(set string) func(string, int) bool {
+	return func(src string, pos int) bool {
+		c := src[pos]
+		return c >= 0x80 || strings.IndexByte(set, c) >= 0
+	}
+}
+
+// wordIn is a prefilter for a rule whose pattern is a set of ASCII words each
+// followed by `\b`: such a pattern matches only when the run of ASCII word bytes
+// at pos is exactly one of the words, because a shorter word is followed by
+// another word byte and `\b` fails there. When the run ends at a non-ASCII byte,
+// or the match starts on one, the word-boundary rules of the engine decide, so
+// the prefilter does not skip.
+func wordIn(words map[string]bool) func(string, int) bool {
+	return func(src string, pos int) bool {
+		end := pos
+		for end < len(src) && isASCIIWordByte(src[end]) {
+			end++
+		}
+		if end < len(src) && src[end] >= 0x80 || end == pos && src[pos] >= 0x80 {
+			return true
+		}
+		return words[src[pos:end]]
+	}
+}
+
+func isASCIIWordByte(c byte) bool {
+	return c == '_' || c >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
 }
 
 // mixin splices another state's rules in order at this point (RegexLexer mixin).

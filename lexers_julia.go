@@ -10,6 +10,26 @@ import (
 	"unicode"
 )
 
+// juliaWordSets holds the word sets the prefilters consult, so a test can feed
+// the lexer every one of their words.
+var juliaWordSets []map[string]bool
+
+// wordSet lists the words of one of the /x word-set patterns above: whitespace
+// is dropped (the gem's /x ignores it, so `mutable struct` is `mutablestruct`),
+// the `(?x:(?:` ... `)\b)` wrapper is peeled off, and `(LOAD|DEPOT)_PATH` is
+// spelled out. Every word is ASCII word bytes or, for π and ℯ, a single
+// non-ASCII letter that wordIn never consults.
+func wordSet(pattern string) map[string]bool {
+	p := strings.Join(strings.Fields(pattern), "")
+	p = strings.TrimSuffix(strings.TrimPrefix(p, `(?x:(?:`), `)\b)`)
+	p = strings.Replace(p, `(LOAD|DEPOT)_PATH`, `LOAD_PATH|DEPOT_PATH`, 1)
+	set := map[string]bool{}
+	for _, w := range strings.Split(p, "|") {
+		set[w] = true
+	}
+	return set
+}
+
 // classOf spells the members of a Unicode range table as the body of a
 // character class: ASCII members as \xHH, the rest as themselves. It stands in
 // for a \p{...} property name the engine does not provide.
@@ -217,6 +237,9 @@ var juliaLexer = func() *RegexLexer {
 	// holds the dashes and brackets, which would make `f(x)` one name.
 	nameRE := `[\p{L}\p{Nl}\p{S}_][\p{Word}\p{S}` + classOf(unicode.Po) + `!]*`
 
+	typeWords, keywordWords, builtinWords := wordSet(types), wordSet(keywords), wordSet(builtins)
+	juliaWordSets = []map[string]bool{typeWords, keywordWords, builtinWords}
+
 	b := newRegexLexer("julia", "Julia", "jl")
 	b.filenames("*.jl")
 	b.detectWith(shebangDetector("julia"))
@@ -230,28 +253,28 @@ var juliaLexer = func() *RegexLexer {
 		rule(`(?:(?!\n)\s)+`, Text).
 		rule(`#=`, CommentMultiline, push("blockcomment")).
 		rule(`#.*$`, Comment).
-		rule(operators, Operator).
+		rule(operators, Operator).when(startsWithAny(`+=-*/\&|$~^%!><.:?`)).
 		rule(`\\\n`, Text).
 		rule(`\\`, Text).
 		// functions and macros
-		groupsRuleT(`(function|macro)((?:\s|\\\s)+)`, []transition{push("funcname")}, Keyword, NameFunction).
+		groupsRuleT(`(function|macro)((?:\s|\\\s)+)`, []transition{push("funcname")}, Keyword, NameFunction).when(startsWithAny("fm")).
 		// types
 		groupsRuleT(`((?:mutable )?struct|(?:abstract|primitive) type)((?:\s|\\\s)+)`,
-			[]transition{push("typename")}, Keyword, NameClass).
-		rule(types, KeywordType).
+			[]transition{push("typename")}, Keyword, NameClass).when(startsWithAny("msap")).
+		rule(types, KeywordType).when(wordIn(typeWords)).
 		// keywords
-		rule(`(local|global|const)\b`, KeywordDeclaration).
-		rule(keywords, Keyword).
-		rule(builtins, NameBuiltin).
+		rule(`(local|global|const)\b`, KeywordDeclaration).when(startsWithAny("lgc")).
+		rule(keywords, Keyword).when(wordIn(keywordWords)).
+		rule(builtins, NameBuiltin).when(wordIn(builtinWords)).
 		// backticks
-		rule("`.*?`", LiteralStringBacktick).
+		rule("`.*?`", LiteralStringBacktick).when(startsWithAny("`")).
 		// chars
-		rule(`'(\\.|\\[0-7]{1,3}|\\x[a-fA-F0-9]{1,3}|\\u[a-fA-F0-9]{1,4}|\\U[a-fA-F0-9]{1,6}|[^\\\'\n])'`, LiteralStringChar).
+		rule(`'(\\.|\\[0-7]{1,3}|\\x[a-fA-F0-9]{1,3}|\\u[a-fA-F0-9]{1,4}|\\U[a-fA-F0-9]{1,6}|[^\\\'\n])'`, LiteralStringChar).when(startsWithAny("'")).
 		// strings
-		rule(`(?:[IL])"`, LiteralString, push("string")).
-		rule(`[E]?"`, LiteralString, push("string")).
+		rule(`(?:[IL])"`, LiteralString, push("string")).when(startsWithAny("IL")).
+		rule(`[E]?"`, LiteralString, push("string")).when(startsWithAny(`E"`)).
 		// names
-		rule(`@[\w.]+`, NameDecorator).
+		rule(`@[\w.]+`, NameDecorator).when(startsWithAny("@")).
 		rule(`(?:[a-zA-Z_¡-￿]|[က-ჿ])(?:[a-zA-Z_0-9¡-￿]|[က-ჿ])*!*`, Name).
 		rule(punctuation, Other).
 		// numbers
