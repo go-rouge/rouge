@@ -1,4 +1,4 @@
-github.com/go-regexp/engine v0.4.0 h1:2o3RuBqpzmVcJ5G71+jrB9Iz77feUqt2/YSl/6zp+lU=
-github.com/go-regexp/engine v0.4.0/go.mod h1:fWnPvSuE4HIVpBQIHMiaPMEE7InDc00KeoPr/QNFGwA=
-github.com/go-ruby-regexp/regexp v0.2.0 h1:YByg1LrvGkqpABG/SbSJMm6P9ZQrdaG713p5DhuAYRw=
-github.com/go-ruby-regexp/regexp v0.2.0/go.mod h1:vnHnoe3lTE6tyibw4gjUBPgvD2AUlviO63njpO08SsQ=
+github.com/go-regexp/engine v0.4.1 h1:BYTG07FDbHwDKS3Eo70AXt+O4xFpONPHe7/5Od0zmls=
+github.com/go-regexp/engine v0.4.1/go.mod h1:fWnPvSuE4HIVpBQIHMiaPMEE7InDc00KeoPr/QNFGwA=
+github.com/go-ruby-regexp/regexp v0.2.1 h1:hzcRVdV91IMMn57owxxp3y6kcBWduJE5fXYoGcIHG0g=
+github.com/go-ruby-regexp/regexp v0.2.1/go.mod h1:Wa6vJhr6UR5wZuWtuJEEHZBI3rqYX5q1bj7TzUWIAXA=
