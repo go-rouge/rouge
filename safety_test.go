@@ -118,7 +118,8 @@ func measurableReps(l Lexer, src string) int {
 	return reps
 }
 
-// timeLex returns the SMALLEST per-lex time over several attempts.
+// timeLexInterleaved returns, for each input, the SMALLEST per-lex time over
+// several rounds.
 //
 // The minimum is the right statistic under contention: other load can only
 // make a run slower, never faster, so the smallest sample is the one least
@@ -132,20 +133,34 @@ func measurableReps(l Lexer, src string) int {
 // at 1.33x and 1.98x. Ratios that jump in both directions do not describe a
 // curve; they describe noise. Collecting first makes each trial start from a
 // comparable heap instead of inheriting whatever the previous test left.
-func timeLex(tb testing.TB, l Lexer, src string, reps int) time.Duration {
+//
+// ⛔ Interleave the inputs being compared: each round times every input once,
+// and each keeps its best round. Timing one input's trials back to back let a
+// slow stretch of a shared CI runner land on one size only; on macOS runners that read as 2.8x-3x for lexers that measure
+// 1.94x-2.03x locally (typescript, then julia, on successive runs of #26).
+// Interleaved, a slow stretch costs every size alike and cancels in the ratio.
+func timeLexInterleaved(tb testing.TB, l Lexer, srcs []string, reps int) []time.Duration {
 	tb.Helper()
-	best := time.Duration(1<<63 - 1)
-	for trial := 0; trial < 5; trial++ {
-		runtime.GC()
-		start := time.Now()
-		for i := 0; i < reps; i++ {
-			l.Lex(src)
-		}
-		if d := time.Since(start); d < best {
-			best = d
+	best := make([]time.Duration, len(srcs))
+	for i := range best {
+		best[i] = time.Duration(1<<63 - 1)
+	}
+	for round := 0; round < 7; round++ {
+		for i, src := range srcs {
+			runtime.GC()
+			start := time.Now()
+			for r := 0; r < reps; r++ {
+				l.Lex(src)
+			}
+			if d := time.Since(start); d < best[i] {
+				best[i] = d
+			}
 		}
 	}
-	return best / time.Duration(reps)
+	for i := range best {
+		best[i] /= time.Duration(reps)
+	}
+	return best
 }
 
 // TestLexingIsLinearInTheInput measures what the README claims: that lexing is
@@ -232,10 +247,11 @@ func TestLexingIsLinearInTheInput(t *testing.T) {
 			// because they take longer, not fewer, reps.
 			smallest := adversarial(c.open, c.filler, sizes[0])
 			reps := measurableReps(l, smallest)
-			times := make([]time.Duration, len(sizes))
+			srcs := make([]string, len(sizes))
 			for i, n := range sizes {
-				times[i] = timeLex(t, l, adversarial(c.open, c.filler, n), reps)
+				srcs[i] = adversarial(c.open, c.filler, n)
 			}
+			times := timeLexInterleaved(t, l, srcs, reps)
 			t.Logf("%d reps per measurement (calibrated at %d bytes)", reps, sizes[0])
 			for i := 1; i < len(sizes); i++ {
 				if times[i-1] <= 0 {
