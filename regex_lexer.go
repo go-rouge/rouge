@@ -143,9 +143,6 @@ type lexState struct {
 	stack []*stateDef
 	null  int
 	out   []TokenValue
-	// refused is set when a match hit matchStackLimit and the rest of the input
-	// was emitted as Text; see refuse.
-	refused bool
 	// heredocStr holds the active here-document terminator for the Shell and
 	// HCL lexers' heredoc states; empty when none is active. One field serves
 	// both because a lexState belongs to a single Lex of a single lexer.
@@ -167,6 +164,11 @@ type lexState struct {
 	nextIndent        int
 	blockScalarIndent int
 	blockScalarSet    bool
+	// refused is set when a match hit matchStackLimit and the rest of the input
+	// was emitted as Text; see refuse. It sits beside blockScalarSet so the two
+	// bools share one padded word: a field of its own pushed lexState into the
+	// next size class, +4.8 KB/op on the Python lexer (one lexState per f-string).
+	refused bool
 	// heredocQueue is the Ruby lexer's pending-heredoc queue (the gem's
 	// @heredoc_queue): each entry is a (tolerant, terminator) pair awaiting its
 	// body after the current line.
@@ -395,7 +397,9 @@ func (ls *lexState) step(state *stateDef) bool {
 		// so ^/\A and lookbehind see the real prefix (StringScanner semantics). The
 		// returned offsets are absolute into ls.src.
 		m, err := r.re.MatchAtErr(ls.src, ls.pos)
-		if errors.Is(err, onigmo.ErrStackLimit) {
+		// err is nil on nearly every call (a rule that simply does not match): test
+		// it first so errors.Is, an out-of-line call, is not paid per attempt.
+		if err != nil && errors.Is(err, onigmo.ErrStackLimit) {
 			// The match was abandoned with the answer unknown: do not fold that into
 			// "no rule matched" (one Error byte, then the same blow-up again at the
 			// next byte). Refuse the rest of the input as Text.
