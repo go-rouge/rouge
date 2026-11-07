@@ -6,6 +6,7 @@ package rouge
 
 import (
 	"fmt"
+	"math"
 	"runtime"
 	"sort"
 	"strings"
@@ -259,14 +260,23 @@ func TestLexingIsLinearInTheInput(t *testing.T) {
 						"did not lift it clear of this platform's clock", sizes[i-1], reps)
 				}
 				ratio := float64(times[i]) / float64(times[i-1])
-				if ratio >= superLinear {
-					t.Errorf("doubling %d->%d bytes multiplied the time by %.2fx "+
-						"(%v -> %v); linear is 2x and 4x is quadratic. A %s rule is "+
-						"scanning the whole remaining input from every position.",
-						sizes[i-1], sizes[i], ratio, times[i-1], times[i], c.tag)
-				}
 				t.Logf("%6d -> %6d bytes: %.2fx (%v -> %v)",
 					sizes[i-1], sizes[i], ratio, times[i-1], times[i])
+			}
+			// ⛔ Judge the whole span, not each doubling. Interleaved, a macOS
+			// runner still read latex as 1.57x then 3.25x (#26), a lexer that
+			// measures 1.95x-2.01x locally: the noise inflated the middle size
+			// down and the largest up, and the span (5.1x) is what stays linear.
+			// The span of a quadratic lexer is 4^doublings, of a linear one
+			// 2^doublings, and superLinear^doublings sits between them.
+			doublings := len(sizes) - 1
+			span := float64(times[doublings]) / float64(times[0])
+			if limit := math.Pow(superLinear, float64(doublings)); span >= limit {
+				t.Errorf("%d->%d bytes multiplied the time by %.2fx (%v -> %v), "+
+					"over %.2fx; linear is %.0fx and quadratic %.0fx. A %s rule is "+
+					"scanning the whole remaining input from every position.",
+					sizes[0], sizes[doublings], span, times[0], times[doublings], limit,
+					math.Pow(2, float64(doublings)), math.Pow(4, float64(doublings)), c.tag)
 			}
 		})
 	}
