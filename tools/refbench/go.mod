@@ -5,7 +5,7 @@ module github.com/go-rouge/rouge/tools/refbench
 go 1.27.1
 
 require (
-	github.com/go-rouge/rouge v0.8.1
+	github.com/go-rouge/rouge v0.9.0
 	github.com/spf13/cobra v1.10.2
 )
 
